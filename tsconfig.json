@@ -1,0 +1,22 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "exclude": ["node_modules/*", "website/*"],
+  "compilerOptions": {
+    "baseUrl": "",
+    "paths": {
+      "*": [ "typings/*" ]
+    },
+    "skipLibCheck": true,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": false,
+    "declaration": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "stripInternal": true,
+    "allowSyntheticDefaultImports": true
+  }
+}

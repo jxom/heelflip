@@ -1,0 +1,111 @@
+import autoPreprocess from 'svelte-preprocess';
+import resolve from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
+import commonjs from '@rollup/plugin-commonjs';
+import svelte from 'rollup-plugin-svelte';
+const { terser } = require('rollup-plugin-terser');
+const ignore = require('rollup-plugin-ignore');
+const { camelCase, upperFirst } = require('lodash');
+const { getIndexPath, getPublicFiles, getSourcePath, getPackage, getModuleDir, getMainDir } = require('./utils');
+
+const cwd = process.cwd();
+const pkg = getPackage(cwd);
+const sourcePath = getSourcePath(cwd);
+const mode = process.env.NODE_ENV;
+const dev = mode === 'development';
+
+// Keeps subdirectories and files belonging to our dependencies as external too
+// (i.e. lodash-es/pick)
+function makeExternalPredicate(externalArr) {
+  if (!externalArr.length) {
+    return () => false;
+  }
+  const pattern = new RegExp(`^(${externalArr.join('|')})($|/)`);
+  return (id) => pattern.test(id);
+}
+
+function getExternal(isUMD) {
+  const external = Object.keys(pkg.peerDependencies || {});
+  const allExternal = [...external, ...Object.keys(pkg.dependencies || {})];
+  return isUMD ? external : makeExternalPredicate(allExternal);
+}
+
+function getPlugins(isUMD) {
+  const commonPlugins = [
+    svelte({
+      preprocess: autoPreprocess(),
+      compilerOptions: {
+        generate: 'ssr',
+        hydratable: true,
+      },
+    }),
+    commonjs({
+      include: /node_modules/,
+    }),
+    resolve({
+      browser: true,
+      dedupe: ['svelte'],
+    }),
+    !dev &&
+      terser({
+        module: true,
+      }),
+  ];
+
+  if (isUMD) {
+    return [
+      ...commonPlugins,
+      ignore(['stream']),
+      terser(),
+      replace({
+        'process.env.NODE_ENV': JSON.stringify('production'),
+      }),
+    ];
+  }
+
+  return commonPlugins;
+}
+
+function getOutput(isUMD) {
+  if (isUMD) {
+    return {
+      name: upperFirst(camelCase(pkg.name)),
+      file: pkg.unpkg,
+      format: 'umd',
+      exports: 'named',
+      globals: {},
+    };
+  }
+
+  const moduleDir = getModuleDir(cwd);
+
+  return [
+    moduleDir && {
+      format: 'es',
+      dir: moduleDir,
+    },
+    {
+      format: 'cjs',
+      dir: getMainDir(cwd),
+      exports: 'named',
+    },
+  ].filter(Boolean);
+}
+
+function getInput(isUMD) {
+  if (isUMD) {
+    return getIndexPath(sourcePath);
+  }
+  return getPublicFiles(sourcePath);
+}
+
+function getConfig(isUMD) {
+  return {
+    external: getExternal(isUMD),
+    plugins: getPlugins(isUMD),
+    output: getOutput(isUMD),
+    input: getInput(isUMD),
+  };
+}
+
+module.exports = [getConfig(), pkg.unpkg && !process.env.NO_UMD && getConfig(true)].filter(Boolean);
