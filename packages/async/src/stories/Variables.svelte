@@ -1,7 +1,7 @@
 <script>
   import { createAsync } from '../index.ts';
 
-  let getRepos = async (...args) =>
+  let getRepos = async ({ username }) =>
     fetch(`https://api.github.com/users/${username}/repos?per_page=99`).then((res) => res.json());
 
   let username = 'jxom';
