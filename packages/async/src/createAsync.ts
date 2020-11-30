@@ -73,12 +73,12 @@ export function createAsync<TResponse, TError>(
     invoke(...initialRecord.variables);
   }
 
-  const newStore = {
+  const decoratedStore = {
     ...store,
     invoke,
     setError,
     setSuccess,
   };
-  storeCache.set(contextKey, newStore);
-  return newStore;
+  storeCache.set(contextKey, decoratedStore);
+  return decoratedStore;
 }
