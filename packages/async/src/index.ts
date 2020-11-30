@@ -1,1 +1,3 @@
-export { default as Async } from './async.svelte';
+export * from './cache';
+export { createAsync } from './createAsync';
+export { createDeferredAsync } from './createDeferredAsync';
