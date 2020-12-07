@@ -1,9 +1,7 @@
-import autoPreprocess from 'svelte-preprocess';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
 import babel from '@rollup/plugin-babel';
-import svelte from 'rollup-plugin-svelte';
 const { terser } = require('rollup-plugin-terser');
 const ignore = require('rollup-plugin-ignore');
 const { camelCase, upperFirst } = require('lodash');
@@ -37,7 +35,7 @@ function getPlugins(isUMD) {
     babel({
       extensions,
       babelHelpers: 'bundled',
-      exclude: ['node_modules/**', '../../node_modules/**'],
+      exclude: ['node_modules/**', '../../node_modules/**', 'src/__stories__/**'],
       include: ['src/**'],
     }),
     commonjs({

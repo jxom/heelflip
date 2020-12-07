@@ -1,5 +1,5 @@
 <script>
-  import { async, recordCache } from '../index.ts';
+  import { async, recordCache } from '../src/index.ts';
 
   let getRepos = async ({ username }) =>
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());

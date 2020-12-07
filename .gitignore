@@ -1,2 +1,13 @@
 node_modules/
-dist
+yarn.lock
+/lib
+/dist/@svelte-tools
+/es
+/ts
+/utils
+/types
+/getDeferredAsyncStore
+/getAsyncStore
+/constants
+/cache
+/async

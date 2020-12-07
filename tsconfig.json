@@ -1,8 +1,12 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
-  "exclude": ["node_modules/*", "website/*"],
+  "exclude": ["node_modules/*"],
+  "include": [
+    "src/**/*"
+  ],
   "compilerOptions": {
     "baseUrl": "",
+    "outDir": "ts",
     "paths": {
       "*": [ "typings/*" ]
     },
