@@ -1,7 +1,7 @@
-import { async } from './async';
+import { getAsyncStore } from './getAsyncStore';
 import type { TFnArg, TContextArg, TConfig } from './types';
 
-export function deferredAsync<TResponse, TError>(
+export function getDeferredAsyncStore<TResponse, TError>(
   contextKeyOrFn: TContextArg | TFnArg<TResponse>,
   fnOrConfig?: TFnArg<TResponse> | TConfig<TResponse, TError>,
   maybeConfig?: TConfig<TResponse, TError>
@@ -19,5 +19,5 @@ export function deferredAsync<TResponse, TError>(
     config = fnOrConfig;
   }
 
-  return async<TResponse, TError>(context, fn, { ...config, defer: true });
+  return getAsyncStore<TResponse, TError>(context, fn, { ...config, defer: true });
 }

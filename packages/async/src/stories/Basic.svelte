@@ -3,7 +3,7 @@
 
   let getRepos = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
 
-  let store = async('characters', getRepos);
+  let store = async.fetch('characters', getRepos);
 
   $: {
     console.log($store);
@@ -11,14 +11,14 @@
 </script>
 
 <div>
-  <h1>Jake's Repos</h1>
+  <h1>Characters</h1>
   {#if $store.isLoading}
     <p>Loading...</p>
   {/if}
   {#if $store.isSuccess}
     <ul>
-      {#each $store.response.results as repo}
-        <li>{repo.name}</li>
+      {#each $store.response.results as character}
+        <li>{character.name}</li>
       {/each}
     </ul>
   {/if}

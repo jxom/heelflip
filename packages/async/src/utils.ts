@@ -4,10 +4,12 @@ import type { TContextArg, TCacheStrategy } from './types';
 export function getStateVariables(state, prevState = undefined) {
   return {
     isIdle: state === STATES.IDLE,
-    isLoading: state === STATES.LOADING,
-    isReloading: state === STATES.RELOADING,
-    isSuccess: state === STATES.SUCCESS || (state === STATES.RELOADING && prevState === STATES.SUCCESS),
-    isError: state === STATES.ERROR || (state === STATES.RELOADING && prevState === STATES.ERROR),
+    isLoading: state === STATES.LOADING || state === STATES.LOADING_SLOW,
+    isLoadingSlow: state === STATES.LOADING,
+    isReloading: state === STATES.RELOADING || state === STATES.RELOADING_SLOW,
+    isReloadingSlow: state === STATES.RELOADING_SLOW,
+    isSuccess: state === STATES.SUCCESS || ((state === STATES.RELOADING || state === STATES.RELOADING_SLOW) && prevState === STATES.SUCCESS),
+    isError: state === STATES.ERROR || ((state === STATES.RELOADING || state === STATES.RELOADING_SLOW) && prevState === STATES.ERROR),
   };
 }
 export function getCacheKey({

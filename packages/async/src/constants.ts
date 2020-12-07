@@ -7,7 +7,9 @@ export const CACHE_STRATEGIES: { [key: string]: TCacheStrategy } = {
 export const STATES = {
   IDLE: 'idle',
   LOADING: 'loading',
+  LOADING_SLOW: 'loading-slow',
   RELOADING: 'reloading',
+  RELOADING_SLOW: 'reloading-slow',
   SUCCESS: 'success',
   ERROR: 'error',
 };

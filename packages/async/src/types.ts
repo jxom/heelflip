@@ -4,5 +4,7 @@ export type TFnArg<TResponse> = (...args: any) => Promise<TResponse>;
 export type TConfig<TResponse, TError> = {
   cacheStrategy?: TCacheStrategy,
   defer?: boolean;
+  enabled?: boolean;
   initialVariables?: Array<unknown>;
+  timeToSlowConnection?: number;
 };
