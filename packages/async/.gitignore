@@ -3,4 +3,10 @@
 /dist/@svelte-tools
 /es
 /ts
-/test
+/utils
+/types
+/getDeferredAsyncStore
+/getAsyncStore
+/constants
+/cache
+/async

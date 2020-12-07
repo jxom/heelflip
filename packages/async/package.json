@@ -18,7 +18,9 @@
   },
   "author": "Jake Moxey",
   "license": "MIT",
-  "devDependencies": {
+  "peerDependencies": {
+    "svelte": ">=3.0.0"
   },
+  "devDependencies": {},
   "dependencies": {}
 }

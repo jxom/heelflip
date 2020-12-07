@@ -25,5 +25,5 @@ if (hasTSConfig(cwd)) {
 }
 
 spawn.sync('rollup', ['-c', join(__dirname, 'rollup.config.js'), watch ? '-w' : undefined].filter(Boolean), {
-  stdio: 'inherit'
+  stdio: 'inherit',
 });

@@ -2,6 +2,7 @@ import autoPreprocess from 'svelte-preprocess';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
+import babel from '@rollup/plugin-babel';
 import svelte from 'rollup-plugin-svelte';
 const { terser } = require('rollup-plugin-terser');
 const ignore = require('rollup-plugin-ignore');
@@ -13,6 +14,7 @@ const pkg = getPackage(cwd);
 const sourcePath = getSourcePath(cwd);
 const mode = process.env.NODE_ENV;
 const dev = mode === 'development';
+const extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
 
 // Keeps subdirectories and files belonging to our dependencies as external too
 // (i.e. lodash-es/pick)
@@ -32,19 +34,18 @@ function getExternal(isUMD) {
 
 function getPlugins(isUMD) {
   const commonPlugins = [
-    svelte({
-      preprocess: autoPreprocess(),
-      compilerOptions: {
-        generate: 'ssr',
-        hydratable: true,
-      },
+    babel({
+      extensions,
+      babelHelpers: 'bundled',
+      exclude: ['node_modules/**', '../../node_modules/**'],
+      include: ['src/**'],
     }),
     commonjs({
       include: /node_modules/,
     }),
     resolve({
-      browser: true,
-      dedupe: ['svelte'],
+      extensions,
+      preferBuiltins: false,
     }),
     !dev &&
       terser({
