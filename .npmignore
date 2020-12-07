@@ -1,1 +1,6 @@
 src/
+scripts/
+.storybook/
+tsconfig.json
+.eslintrc.js
+babel.config.js
