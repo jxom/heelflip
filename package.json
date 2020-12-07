@@ -1,6 +1,6 @@
 {
   "name": "svelte-async-store",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A utility to help with fetching, mutating and caching async data in Svelte",
   "main": "lib/index.js",
   "module": "es/index.js",
