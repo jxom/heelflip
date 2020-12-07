@@ -1,3 +1,3 @@
 export * from './cache';
-export { createAsync } from './createAsync';
-export { createDeferredAsync } from './createDeferredAsync';
+export { async } from './async';
+export { deferredAsync } from './deferredAsync';

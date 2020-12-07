@@ -1,9 +1,9 @@
 <script>
-  import { createAsync } from '../index.ts';
+  import { async } from '../index.ts';
 
-  let getRepos = async () => fetch('https://api.github.com/users/jxom/repos?per_page=99').then((res) => res.json());
+  let getRepos = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
 
-  let store = createAsync('repos', getRepos);
+  let store = async('repos', getRepos);
 </script>
 
 <div>
@@ -13,7 +13,7 @@
   {/if}
   {#if $store.isSuccess}
     <ul>
-      {#each $store.response as repo}
+      {#each $store.response.results as repo}
         <li>{repo.name}</li>
       {/each}
     </ul>

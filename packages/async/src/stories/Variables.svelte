@@ -1,14 +1,19 @@
 <script>
-  import { createAsync } from '../index.ts';
+  import { async, recordCache } from '../index.ts';
 
   let getRepos = async ({ username }) =>
-    fetch(`https://api.github.com/users/${username}/repos?per_page=99`).then((res) => res.json());
+    fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
 
-  let username = 'jxom';
-  let store = createAsync('repos', getRepos, { initialVariables: [{ username }] });
+  let username = 'rick';
+  let store = async('repos', getRepos, { initialVariables: [{ username }] });
 
   function handleClickFetch() {
     store.invoke({ username });
+  }
+
+  $: {
+    console.log($store);
+    console.log(recordCache.entries())
   }
 </script>
 
@@ -22,7 +27,7 @@
   {/if}
   {#if $store.isSuccess}
     <ul>
-      {#each $store.response as repo}
+      {#each $store.response.results as repo}
         <li>{repo.name}</li>
       {/each}
     </ul>
