@@ -12,10 +12,10 @@ export function getAsyncStore<TResponse, TError>(
 ) {
   const { cacheStrategy = CACHE_STRATEGIES.CONTEXT_AND_VARIABLES, defer = false, enabled: initialEnabled = true, initialVariables = [], timeToSlowConnection = 3000 } = opts;
 
-  const enabled = !defer && initialEnabled;
-
+  let invokeCount = 0;
   const cacheKey = utils.getCacheKey({ contextKey, variables: initialVariables, cacheStrategy });
   const cachedRecord = recordCache.get(cacheKey);
+  const enabled = !defer && initialEnabled;
 
   const initialState = enabled ? STATES.LOADING : STATES.IDLE;
   let initialRecord = {
@@ -56,36 +56,34 @@ export function getAsyncStore<TResponse, TError>(
     return { slowConnectionTimeout };
   }
 
-  function setSuccess(contextKey, { slowConnectionTimeout, variables }, response) {
-    const cacheKey = utils.getCacheKey({ contextKey, variables, cacheStrategy });
+  function setData(contextKey, { localInvokeCount, setCache = false, slowConnectionTimeout, variables }, { response = undefined, error = undefined, state }) {
+    clearTimeout(slowConnectionTimeout);
+
+    if (invokeCount !== localInvokeCount) return;
+  
     const record = get(store);
     const newRecord = {
       ...record,
-      error: undefined,
+      error,
       response,
-      state: STATES.SUCCESS,
-      ...utils.getStateVariables(STATES.SUCCESS),
+      state,
+      ...utils.getStateVariables(state),
     }
     
-    recordCache.set(cacheKey, newRecord)
-    store.set(newRecord);
+    if (setCache) {
+      const cacheKey = utils.getCacheKey({ contextKey, variables, cacheStrategy });
+      recordCache.set(cacheKey, newRecord)
+    }
   
-    clearTimeout(slowConnectionTimeout);
+    store.set(newRecord);
   }
 
-  function setError(contextKey, { slowConnectionTimeout, variables }, error) {
-    const record = get(store);
-    const newRecord = {
-      ...record,
-      response: undefined,
-      error,
-      state: STATES.ERROR,
-      ...utils.getStateVariables(STATES.ERROR),
-    };
-  
-    store.set(newRecord);
+  function setSuccess(contextKey, { localInvokeCount, slowConnectionTimeout, variables }, response) {
+    setData(contextKey, { localInvokeCount, setCache: true, slowConnectionTimeout, variables }, { response, state: STATES.SUCCESS })
+  }
 
-    clearTimeout(slowConnectionTimeout);
+  function setError(contextKey, { localInvokeCount, slowConnectionTimeout, variables }, error) {
+    setData(contextKey, { localInvokeCount, slowConnectionTimeout, variables }, { error, state: STATES.ERROR })
   }
 
   function invoke(...variables) {
@@ -97,9 +95,12 @@ export function getAsyncStore<TResponse, TError>(
 
     const { slowConnectionTimeout } = setLoading();
 
+    invokeCount = invokeCount + 1;
+    const localInvokeCount = invokeCount;
+
     fn(...variables)
-      .then((response) => setSuccess(contextKey, { slowConnectionTimeout, variables }, response))
-      .catch((error) => setError(contextKey, { slowConnectionTimeout, variables }, error));
+      .then((response) => setSuccess(contextKey, { localInvokeCount, slowConnectionTimeout, variables }, response))
+      .catch((error) => setError(contextKey, { localInvokeCount, slowConnectionTimeout, variables }, error));
   }
 
   if (enabled) {
