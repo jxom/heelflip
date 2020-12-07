@@ -3,7 +3,11 @@
 
   let getRepos = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
 
-  let store = async('repos', getRepos);
+  let store = async('characters', getRepos);
+
+  $: {
+    console.log($store);
+  }
 </script>
 
 <div>

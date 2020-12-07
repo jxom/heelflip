@@ -12,14 +12,14 @@ export function getStateVariables(state, prevState = undefined) {
 }
 export function getCacheKey({
   contextKey,
-  variables,
+  variables = [],
   cacheStrategy
 }: {
   contextKey: TContextArg | null;
-  variables: Object;
+  variables: Array<Object>;
   cacheStrategy: TCacheStrategy;
 }) {
-  const variablesHash = JSON.stringify(variables);
+  const variablesHash = variables.length > 0 ? JSON.stringify(variables) : '';
   let cacheKey = Array.isArray(contextKey) ? contextKey.join('.') : contextKey;
   if (variablesHash && cacheStrategy === CACHE_STRATEGIES.CONTEXT_AND_VARIABLES) {
     cacheKey = `${cacheKey}.${variablesHash}`;

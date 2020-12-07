@@ -30,7 +30,7 @@ export function async<TResponse, TError>(
 
   const store = writable(initialRecord);
 
-  if (contextKey) {
+  if (contextKey && !defer) {
     recordCache.set(cacheKey, initialRecord);
   }
 
@@ -74,7 +74,11 @@ export function async<TResponse, TError>(
   }
 
   function invoke(...variables) {
-    setStale({ variables });
+    variables = variables.filter((arg: any) => arg.constructor.name !== 'Class' && !arg.constructor.name.includes('Event'));
+
+    if (!defer) {
+      setStale({ variables });
+    }
 
     setLoading();
 
