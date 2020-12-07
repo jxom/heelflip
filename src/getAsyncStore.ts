@@ -12,8 +12,6 @@ export function getAsyncStore<TResponse, TError>(
 ) {
   const { cacheStrategy = CACHE_STRATEGIES.CONTEXT_AND_VARIABLES, defer = false, enabled: initialEnabled = true, initialVariables = [], timeToSlowConnection = 3000 } = opts;
 
-  let slowConnectionTimeout;
-
   const enabled = !defer && initialEnabled;
 
   const cacheKey = utils.getCacheKey({ contextKey, variables: initialVariables, cacheStrategy });
@@ -50,13 +48,15 @@ export function getAsyncStore<TResponse, TError>(
     const state = record.isIdle || record.isLoading ? STATES.LOADING : STATES.RELOADING;
     store.set({ ...record, state, ...utils.getStateVariables(state, record.state) });
   
-    slowConnectionTimeout = setTimeout(() => {
+    const slowConnectionTimeout = setTimeout(() => {
       const slowState = state === STATES.LOADING ? STATES.LOADING_SLOW : STATES.RELOADING_SLOW
       store.set({ ...record, state: slowState, ...utils.getStateVariables(slowState, record.state) });
     }, timeToSlowConnection);
+
+    return { slowConnectionTimeout };
   }
 
-  function setSuccess(contextKey, { variables }, response) {
+  function setSuccess(contextKey, { slowConnectionTimeout, variables }, response) {
     const cacheKey = utils.getCacheKey({ contextKey, variables, cacheStrategy });
     const record = get(store);
     const newRecord = {
@@ -73,15 +73,19 @@ export function getAsyncStore<TResponse, TError>(
     clearTimeout(slowConnectionTimeout);
   }
 
-  function setError(contextKey, { variables }, error) {
+  function setError(contextKey, { slowConnectionTimeout, variables }, error) {
     const record = get(store);
-    store.set({
+    const newRecord = {
       ...record,
       response: undefined,
       error,
       state: STATES.ERROR,
       ...utils.getStateVariables(STATES.ERROR),
-    });
+    };
+  
+    store.set(newRecord);
+
+    clearTimeout(slowConnectionTimeout);
   }
 
   function invoke(...variables) {
@@ -91,11 +95,11 @@ export function getAsyncStore<TResponse, TError>(
       setStale({ variables });
     }
 
-    setLoading();
+    const { slowConnectionTimeout } = setLoading();
 
     fn(...variables)
-      .then((response) => setSuccess(contextKey, { variables }, response))
-      .catch((error) => setError(contextKey, { variables }, error));
+      .then((response) => setSuccess(contextKey, { slowConnectionTimeout, variables }, response))
+      .catch((error) => setError(contextKey, { slowConnectionTimeout, variables }, error));
   }
 
   if (enabled) {
