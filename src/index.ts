@@ -1,2 +1,2 @@
 export * from './cache';
-export { async } from './async';
+export { asyncStore } from './asyncStore';
