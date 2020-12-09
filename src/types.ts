@@ -6,5 +6,7 @@ export type TConfig<TResponse, TError> = {
   defer?: boolean;
   enabled?: boolean;
   initialVariables?: Array<unknown>;
+  invalidateOnSuccess?: boolean;
+  mutate?: boolean,
   timeToSlowConnection?: number;
 };

@@ -3,6 +3,6 @@ import { getDeferredAsyncStore } from "./getDeferredAsyncStore";
 
 export const asyncStore = {
   fetch: getAsyncStore,
-  fetchDeferred: getDeferredAsyncStore,
-  mutate: getDeferredAsyncStore
+  fetchDeferred: getDeferredAsyncStore({ mutate: false }),
+  mutate: getDeferredAsyncStore({ mutate: true })
 }
