@@ -29,18 +29,18 @@ export function getAsyncStore<TResponse, TError>(
     cacheStrategy: initialCacheStrategy = CACHE_STRATEGIES.CONTEXT_ONLY,
     defer = false,
     enabled: initialEnabled = true,
-    initialVariables = [],
+    variables = [],
     mutate = false,
     invalidateOnSuccess = false,
     timeToSlowConnection = 3000,
   } = opts;
-  const cacheStrategy = initialVariables.length > 0 ? CACHE_STRATEGIES.CONTEXT_AND_VARIABLES : initialCacheStrategy;
+  const cacheStrategy = variables.length > 0 ? CACHE_STRATEGIES.CONTEXT_AND_VARIABLES : initialCacheStrategy;
 
   ////////////////////////////////////////////////////////////////////////
 
   let invokeCount = 0;
   let hasUpdater = false;
-  let cacheKey = utils.getCacheKey({ contextKey, variables: initialVariables, cacheStrategy });
+  let cacheKey = utils.getCacheKey({ contextKey, variables, cacheStrategy });
   const cachedRecord = recordCache.get(cacheKey);
   const enabled = !defer && initialEnabled;
 
@@ -49,7 +49,7 @@ export function getAsyncStore<TResponse, TError>(
   const initialState = enabled ? STATES.LOADING : STATES.IDLE;
   let initialRecord = {
     contextKey,
-    variables: initialVariables,
+    variables,
     response: undefined,
     error: undefined,
     state: initialState,
@@ -167,7 +167,9 @@ export function getAsyncStore<TResponse, TError>(
   ////////////////////////////////////////////////////////////////////////
 
   store.subscribe(({ variables }) => {
-    cacheKey = utils.getCacheKey({ contextKey, variables, cacheStrategy });
+    if (!mutate) {
+      cacheKey = utils.getCacheKey({ contextKey, variables, cacheStrategy });
+    }
 
     if (!hasUpdater && !invalidateOnSuccess) {
       hasUpdater = true;

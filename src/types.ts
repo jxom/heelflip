@@ -5,8 +5,8 @@ export type TConfig<TResponse, TError> = {
   cacheStrategy?: TCacheStrategy,
   defer?: boolean;
   enabled?: boolean;
-  initialVariables?: Array<unknown>;
   invalidateOnSuccess?: boolean;
   mutate?: boolean,
   timeToSlowConnection?: number;
+  variables?: Array<unknown>;
 };

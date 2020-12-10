@@ -2,19 +2,16 @@
   import { asyncStore } from '../index.ts';
   import todoApi from './api/todo';
 
+  let todoTitle;
+
   let getTodos = async () => todoApi.getAll();
   let todosStore = asyncStore.fetch('todos', getTodos);
 
+  let createTodo = async ({ title }) => todoApi.create({ title }, { returnsItems: true });
+  let createTodoStore = asyncStore.mutate('todos', createTodo);
+
   let deleteTodo = async (id) => todoApi.delete(id, { returnsItems: true });
   let deleteTodoStore = asyncStore.mutate('todos', deleteTodo);
-
-  $: {
-    console.log('todosStore', $todosStore);
-  }
-
-  $: {
-    console.log('deleteTodoStore', $deleteTodoStore);
-  }
 </script>
 
 <div>
@@ -23,6 +20,15 @@
     <p>Loading...</p>
   {/if}
   {#if $todosStore.isSuccess}
+    <input bind:value={todoTitle} />
+    <button 
+      on:click={() => {
+        createTodoStore.invoke({ title: todoTitle });
+        todoTitle = '';
+      }}
+    >
+      add
+  </button>
     <ul>
       {#each $todosStore.response as todo}
         <li>

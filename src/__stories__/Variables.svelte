@@ -5,7 +5,7 @@
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
 
   let username = 'rick';
-  let store = asyncStore.fetch('characters', getRepos, { initialVariables: [{ username }] });
+  let store = asyncStore.fetch('characters', getRepos, { variables: [{ username }] });
 
   function handleClickFetch() {
     store.invoke({ username });

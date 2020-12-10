@@ -4,7 +4,7 @@
   let id = 1;
 
   let getCharacter = async ({ id }) => fetch(`https://rickandmortyapi.com/api/character/${id}`).then((res) => res.json());
-  let characterStore = asyncStore.fetch('character', getCharacter, { initialVariables: [{ id }] });
+  let characterStore = asyncStore.fetch('character', getCharacter, { variables: [{ id }] });
 
   let getLocation = async ({ locationUrl }) => fetch(locationUrl).then((res) => res.json());
   let locationStore = asyncStore.fetch('location', getLocation, { enabled: false });

@@ -22,9 +22,25 @@ export default {
     },
   ],
   async getAll() {
+    console.log('getAll()');
     return new Promise((res) => setTimeout(() => res(this.todos), 1000));
   },
-  delete(id, { returnsItems = true }) {
+  async create({ title }, { returnsItems = true }) {
+    console.log(`create({ ${title} })`);
+    return new Promise((res) => {
+      this.todos.push({ id: this.todos.length + 1, title });
+
+      setTimeout(() => {
+        if (returnsItems) {
+          res(this.todos);
+        } else {
+          res();
+        }
+      }, 200);
+    });
+  },
+  async delete(id, { returnsItems = true }) {
+    console.log(`delete(${id})`);
     return new Promise((res) => {
       this.todos = this.todos.filter((todo) => todo.id !== id);
 
