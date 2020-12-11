@@ -1,8 +1,14 @@
-import type { TCacheStrategy } from './types';
+import type { TCacheStrategy, TFetchStrategy } from './types';
 
 export const CACHE_STRATEGIES: { [key: string]: TCacheStrategy } = {
   CONTEXT_ONLY: 'context-only',
   CONTEXT_AND_VARIABLES: 'context-and-variables'
+};
+export const FETCH_STRATEGIES: { [key: string]: TFetchStrategy } = {
+  FETCH_ONLY: 'fetch-only',
+  CACHE_ONLY: 'cache-only',
+  CACHE_FIRST: 'cache-first',
+  CACHE_AND_FETCH: 'cache-and-fetch'
 };
 export const STATES = {
   IDLE: 'idle',

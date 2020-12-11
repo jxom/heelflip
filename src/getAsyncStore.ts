@@ -2,7 +2,7 @@ import { get, writable } from 'svelte/store';
 import { onDestroy } from 'svelte';
 
 import { recordCache, updaterCache } from './cache';
-import { CACHE_STRATEGIES, STATES } from './constants';
+import { CACHE_STRATEGIES, FETCH_STRATEGIES, STATES } from './constants';
 import * as utils from './utils';
 import type { TContextArg, TFnArg, TConfig } from './types';
 
@@ -29,6 +29,7 @@ export function getAsyncStore<TResponse, TError>(
     cacheStrategy: initialCacheStrategy = CACHE_STRATEGIES.CONTEXT_ONLY,
     defer = false,
     enabled: initialEnabled = true,
+    fetchStrategy = FETCH_STRATEGIES.CACHE_AND_FETCH,
     variables = [],
     mutate = false,
     invalidateOnSuccess = false,
@@ -41,7 +42,7 @@ export function getAsyncStore<TResponse, TError>(
   let invokeCount = 0;
   let hasUpdater = false;
   let cacheKey = utils.getCacheKey({ contextKey, variables, cacheStrategy });
-  const cachedRecord = recordCache.get(cacheKey);
+  const cachedRecord = recordCache.get(cacheKey, { fetchStrategy });
   const enabled = !defer && initialEnabled;
 
   ////////////////////////////////////////////////////////////////////////
@@ -52,6 +53,7 @@ export function getAsyncStore<TResponse, TError>(
     variables,
     response: undefined,
     error: undefined,
+    promise: undefined,
     state: initialState,
     ...utils.getStateVariables(initialState),
   };
@@ -66,7 +68,7 @@ export function getAsyncStore<TResponse, TError>(
   ////////////////////////////////////////////////////////////////////////
 
   if (contextKey && enabled) {
-    recordCache.set(cacheKey, initialRecord);
+    recordCache.set(cacheKey, initialRecord, { fetchStrategy });
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -76,7 +78,7 @@ export function getAsyncStore<TResponse, TError>(
   }
 
   function setStale() {
-    const cachedRecord = recordCache.get(cacheKey);
+    const cachedRecord = recordCache.get(cacheKey, { fetchStrategy });
     store.update((record) => ({ ...record, ...cachedRecord }));
   }
 
@@ -113,7 +115,7 @@ export function getAsyncStore<TResponse, TError>(
     };
 
     if (setCache) {
-      recordCache.set(cacheKey, newRecord);
+      recordCache.set(cacheKey, newRecord, { fetchStrategy });
     }
 
     store.set(newRecord);
@@ -146,8 +148,15 @@ export function getAsyncStore<TResponse, TError>(
 
     setVariables(variables);
 
-    if (!defer) {
+    if (!defer && fetchStrategy !== FETCH_STRATEGIES.FETCH_ONLY) {
       setStale();
+    }
+
+    if (fetchStrategy === FETCH_STRATEGIES.CACHE_FIRST) {
+      const cachedRecord = recordCache.get(cacheKey, { fetchStrategy });
+      if (cachedRecord?.isSuccess) {
+        return;
+      }
     }
 
     const { slowConnectionTimeout } = setLoading();
