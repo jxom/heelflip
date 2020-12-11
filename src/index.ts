@@ -1,2 +1,2 @@
 export * from './cache';
-export { asyncStore } from './asyncStore';
+export { asyncStore, asyncStore as default } from './asyncStore';

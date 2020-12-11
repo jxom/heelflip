@@ -5,7 +5,7 @@ export function getStateVariables(state, prevState = undefined) {
   return {
     isIdle: state === STATES.IDLE,
     isLoading: state === STATES.LOADING || state === STATES.LOADING_SLOW,
-    isLoadingSlow: state === STATES.LOADING,
+    isLoadingSlow: state === STATES.LOADING_SLOW,
     isReloading: state === STATES.RELOADING || state === STATES.RELOADING_SLOW,
     isReloadingSlow: state === STATES.RELOADING_SLOW,
     isSuccess: state === STATES.SUCCESS || ((state === STATES.RELOADING || state === STATES.RELOADING_SLOW) && prevState === STATES.SUCCESS),

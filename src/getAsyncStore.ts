@@ -1,6 +1,7 @@
 import { get, writable } from 'svelte/store';
 import { onDestroy } from 'svelte';
 
+import { globalConfig } from './config';
 import { recordCache, updaterCache } from './cache';
 import { CACHE_STRATEGIES, FETCH_STRATEGIES, STATES } from './constants';
 import * as utils from './utils';
@@ -23,19 +24,19 @@ function invalidateCache(cacheKey: string) {
 export function getAsyncStore<TResponse, TError>(
   contextKey: TContextArg,
   fn: TFnArg<TResponse>,
-  opts: TConfig<TResponse, TError> = {}
+  config: TConfig<TResponse, TError> = {}
 ) {
   const {
-    cacheStrategy: initialCacheStrategy = CACHE_STRATEGIES.CONTEXT_ONLY,
-    defer = false,
+    cacheStrategy: initialCacheStrategy,
+    defer,
     enabled: initialEnabled = true,
-    fetchStrategy = FETCH_STRATEGIES.CACHE_AND_FETCH,
+    fetchStrategy,
     variables = [],
-    mutate = false,
-    invalidateOnSuccess = false,
-    timeToSlowConnection = 3000,
-  } = opts;
-  const cacheStrategy = variables.length > 0 ? CACHE_STRATEGIES.CONTEXT_AND_VARIABLES : initialCacheStrategy;
+    mutate,
+    invalidateOnSuccess,
+    timeToSlowConnection,
+  } = { ...globalConfig, ...config };
+  const cacheStrategy = variables.length === 0 ? CACHE_STRATEGIES.CONTEXT_ONLY : initialCacheStrategy;
 
   ////////////////////////////////////////////////////////////////////////
 
@@ -87,10 +88,14 @@ export function getAsyncStore<TResponse, TError>(
     const state = record.isIdle || record.isLoading ? STATES.LOADING : STATES.RELOADING;
     store.set({ ...record, state, ...utils.getStateVariables(state, record.state) });
 
-    const slowConnectionTimeout = setTimeout(() => {
-      const slowState = record.state === STATES.LOADING ? STATES.LOADING_SLOW : STATES.RELOADING_SLOW;
-      store.set({ ...record, state: slowState, ...utils.getStateVariables(slowState, record.state) });
-    }, timeToSlowConnection);
+    let slowConnectionTimeout;
+    if (typeof timeToSlowConnection === 'number') {
+      slowConnectionTimeout = setTimeout(() => {
+        const record = get(store);
+        const slowState = record.state === STATES.LOADING ? STATES.LOADING_SLOW : STATES.RELOADING_SLOW;
+        store.set({ ...record, state: slowState, ...utils.getStateVariables(slowState, record.state) });
+      }, timeToSlowConnection);
+    }
 
     return { slowConnectionTimeout };
   }
