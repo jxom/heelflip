@@ -1,11 +1,11 @@
 <script>
   import { asyncStore } from '../index.ts';
 
-  let getRepos = async ({ username }) =>
+  let getCharacters = async ({ username }) =>
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
 
   let username = 'rick';
-  let charactersStore = asyncStore.fetch('characters', getRepos, { enabled: false, variables: [{ username }] });
+  let charactersStore = asyncStore.fetch('characters', getCharacters, { enabled: false, variables: [{ username }] });
 
   function handleClickFetch() {
     charactersStore.invoke({ username });

@@ -1,9 +1,8 @@
 <script>
   import { asyncStore } from '../index.ts';
 
-  let getRepos = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
-
-  let store = asyncStore.fetch('characters', getRepos);
+  let getCharacters = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
+  let store = asyncStore.fetch('characters', getCharacters);
 
   $: {
     console.log($store);
