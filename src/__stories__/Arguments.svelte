@@ -1,37 +1,37 @@
 <script>
-  import { asyncStore } from '../index.ts';
+  import { asyncStore, storeCache } from '../index.ts';
 
   let getCharacters = async ({ username }) =>
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
 
   let username = 'rick';
-  let charactersStore = asyncStore.fetch(['characters', [{ username }]], getCharacters, { enabled: false });
+  let store = asyncStore.fetch(['characters', [{ username }]], getCharacters);
 
   function handleClickFetch() {
-    charactersStore.invoke({ username });
+    store.invoke({ username });
   }
 
   $: {
-    console.log($charactersStore);
+    console.log($store);
   }
 </script>
 
 <div>
   <input bind:value={username} />
   <button on:click={handleClickFetch}>
-    {#if $charactersStore.isReloading}Fetching...{:else}Fetch{/if}
+    {#if $store.isReloading}Fetching...{:else}Fetch{/if}
   </button>
-  {#if $charactersStore.isLoading}
+  {#if $store.isLoading}
     <p>Loading...</p>
   {/if}
-  {#if $charactersStore.isSuccess}
+  {#if $store.isSuccess}
     <ul>
-      {#each $charactersStore.response.results as character}
+      {#each $store.response.results as character}
         <li>{character.name}</li>
       {/each}
     </ul>
   {/if}
-  {#if $charactersStore.isError}
+  {#if $store.isError}
     <p>Awwies</p>
   {/if}
 </div>

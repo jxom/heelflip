@@ -1,22 +1,68 @@
 import { FETCH_STRATEGIES } from "./constants";
+import type { TContextKeyAndArgs } from "./types";
+import * as utils from './utils';
 
-export const recordCache = {
-  cache: new Map(),
-  get(key: string, opts: any) {
-    const { fetchStrategy } = opts;
+export const storeCache = {
+  records: new Map(),
+  updaters: new Map(),
+  get(contextKeyAndArgs: TContextKeyAndArgs, opts: any = {}) {
+    const { cacheStrategy, fetchStrategy } = opts;
+
+    let cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
+
     if (fetchStrategy === FETCH_STRATEGIES.FETCH_ONLY) return;
-    return this.cache.get(key);
+    
+    return this.records.get(cacheKey);
   },
-  set(key: string, value: any, opts: any) {
-    const { fetchStrategy } = opts;
+  set(contextKeyAndArgs: TContextKeyAndArgs, value: any, opts: any = {}) {
+    const { cacheStrategy, fetchStrategy } = opts;
+    
+    let cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
+
     if (fetchStrategy === FETCH_STRATEGIES.FETCH_ONLY) return;
-    return this.cache.set(key, {
+
+    return this.records.set(cacheKey, {
       updatedAt: new Date(),
       ...value,
     });
   },
+  upsert(contextKeyAndArgs: TContextKeyAndArgs, value: any, opts: any = {}) {
+    const { cacheStrategy, fetchStrategy } = opts;
+    
+    let cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
+
+    if (fetchStrategy === FETCH_STRATEGIES.FETCH_ONLY) return;
+
+    const currentValue = this.records.get(cacheKey);
+    return this.records.set(cacheKey, {
+      ...currentValue,
+      updatedAt: new Date(),
+      ...value,
+    });
+  },
+  invalidate(contextKeyAndArgs: TContextKeyAndArgs, opts: any = {}) {
+    const { cacheStrategy } = opts;
+
+    let cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
+    
+    const [_, args] = utils.getContextKeyAndArgs(contextKeyAndArgs);
+
+    const updaters = this.updaters.get(cacheKey);
+    if (updaters) {
+      updaters.forEach((updater: any) => updater.invoke?.(...args));
+    }
+  },
+  broadcastChanges(contextKeyAndArgs: TContextKeyAndArgs, data: any, opts: any = {}) {
+    const { cacheStrategy } = opts;
+
+    let cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
+
+    const updaters = this.updaters.get(cacheKey);
+    if (updaters) {
+      updaters.forEach((updater: any) => updater.setSuccess({ isBroadcast: true }, data));
+    }
+  },
+  setSuccess(contextKeyAndArgs: TContextKeyAndArgs, data: any, opts: any = {}) {
+    this.broadcastChanges(contextKeyAndArgs, data, opts);
+  }
 };
-
-//////////////////////////////////////////////
-
-export const updaterCache = new Map();

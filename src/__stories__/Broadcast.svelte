@@ -9,9 +9,14 @@
 </script>
 
 <div>
-  <button on:click={() => firstStore.invoke()}>Fetch</button>
+  <p>
+    When we fetch the first characters store, it will also fetch the second and third store as it will broadcast the
+    successful response across all consumer stores with context "characters".
+  </p>
 
-  <h1>Characters</h1>
+  <button on:click={() => firstStore.invoke()}>Fetch first store</button>
+
+  <h1>Characters (first store)</h1>
   {#if $firstStore.isLoading}
     <p>Loading...</p>
   {/if}
@@ -28,7 +33,7 @@
 </div>
 
 <div>
-  <h1>Characters</h1>
+  <h1>Characters (second store)</h1>
   {#if $secondStore.isLoading}
     <p>Loading...</p>
   {/if}
@@ -45,7 +50,7 @@
 </div>
 
 <div>
-  <h1>Characters</h1>
+  <h1>Characters (third store)</h1>
   {#if $thirdStore.isLoading}
     <p>Loading...</p>
   {/if}

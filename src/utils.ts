@@ -1,7 +1,7 @@
 import { CACHE_STRATEGIES, STATES } from './constants';
-import type { TContextArg, TCacheStrategy } from './types';
+import type { TArgs, TCacheStrategy, TContextKey, TContextKeyAndArgs, TLoadingState } from './types';
 
-export function getStateVariables(state, prevState = undefined) {
+export function getStateVariables(state: TLoadingState, prevState: TLoadingState | undefined = undefined) {
   return {
     isIdle: state === STATES.IDLE,
     isLoading: state === STATES.LOADING || state === STATES.LOADING_SLOW,
@@ -12,19 +12,28 @@ export function getStateVariables(state, prevState = undefined) {
     isError: state === STATES.ERROR || ((state === STATES.RELOADING || state === STATES.RELOADING_SLOW) && prevState === STATES.ERROR),
   };
 }
+
+export function getContextKeyAndArgs(contextKeyAndArgs: TContextKeyAndArgs): [TContextKey, TArgs] {
+  let contextKey = contextKeyAndArgs as string;
+  let args: TArgs = [];
+  if (Array.isArray(contextKeyAndArgs)) {
+    [contextKey, args = []] = contextKeyAndArgs;
+  }
+  return [contextKey, args];
+}
+
 export function getCacheKey({
-  contextKey,
-  variables = [],
-  cacheStrategy
+  contextKeyAndArgs,
+  cacheStrategy = CACHE_STRATEGIES.CONTEXT_AND_ARGS
 }: {
-  contextKey: TContextArg | null;
-  variables: Array<Object>;
+  contextKeyAndArgs: TContextKeyAndArgs;
   cacheStrategy: TCacheStrategy;
 }) {
-  const variablesHash = variables.length > 0 ? JSON.stringify(variables) : '';
+  const [contextKey, args] = getContextKeyAndArgs(contextKeyAndArgs);
+  const argsHash = args.length > 0 ? JSON.stringify(args) : '';
   let cacheKey = Array.isArray(contextKey) ? contextKey.join('.') : contextKey;
-  if (variablesHash && cacheStrategy === CACHE_STRATEGIES.CONTEXT_AND_VARIABLES) {
-    cacheKey = `${cacheKey}.${variablesHash}`;
+  if (argsHash && cacheStrategy === CACHE_STRATEGIES.CONTEXT_AND_ARGS) {
+    cacheKey = `${cacheKey}.${argsHash}`;
   }
   return cacheKey;
 }

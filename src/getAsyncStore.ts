@@ -2,56 +2,58 @@ import { get, writable } from 'svelte/store';
 import { onDestroy } from 'svelte';
 
 import { globalConfig } from './config';
-import { recordCache, updaterCache } from './cache';
+import { storeCache } from './cache';
 import { CACHE_STRATEGIES, FETCH_STRATEGIES, STATES } from './constants';
 import * as utils from './utils';
-import type { TContextArg, TFnArg, TConfig } from './types';
-
-function broadcastChanges(cacheKey: string, data) {
-  const updaters = updaterCache.get(cacheKey);
-  if (updaters) {
-    updaters.forEach((updater: any) => updater.setSuccess({ isBroadcast: true }, data));
-  }
-}
-
-function invalidateCache(cacheKey: string) {
-  const updaters = updaterCache.get(cacheKey);
-  if (updaters) {
-    updaters.forEach((updater: any) => updater.invoke?.());
-  }
-}
+import type {
+  TContextKeyAndArgs,
+  TFn,
+  TConfig,
+  TResponseOrResponseFn,
+  TRecord,
+  TLoadingState,
+  TSetDataOpts,
+  TSetDataRecord,
+  TSetErrorOpts,
+  TSetSuccessOpts,
+  TArgs,
+} from './types';
 
 export function getAsyncStore<TResponse, TError>(
-  contextKey: TContextArg,
-  fn: TFnArg<TResponse>,
+  initialContextKeyAndArgs: TContextKeyAndArgs,
+  fn: TFn<TResponse>,
   config: TConfig<TResponse, TError> = {}
 ) {
+  const [contextKey, initialArgs] = utils.getContextKeyAndArgs(initialContextKeyAndArgs);
+
+  ////////////////////////////////////////////////////////////////////////
+
   const {
-    cacheStrategy: initialCacheStrategy,
+    cacheStrategy,
     defer,
     enabled: initialEnabled = true,
     fetchStrategy,
-    variables = [],
     mutate,
     invalidateOnSuccess,
     timeToSlowConnection,
   } = { ...globalConfig, ...config };
-  const cacheStrategy = variables.length === 0 ? CACHE_STRATEGIES.CONTEXT_ONLY : initialCacheStrategy;
 
   ////////////////////////////////////////////////////////////////////////
 
   let invokeCount = 0;
   let hasUpdater = false;
-  let cacheKey = utils.getCacheKey({ contextKey, variables, cacheStrategy });
-  const cachedRecord = recordCache.get(cacheKey, { fetchStrategy });
+  let contextKeyAndArgs = initialContextKeyAndArgs;
+  let args = initialArgs;
+  const cachedRecord = storeCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
   const enabled = !defer && initialEnabled;
 
   ////////////////////////////////////////////////////////////////////////
 
-  const initialState = enabled ? STATES.LOADING : STATES.IDLE;
-  let initialRecord = {
+  const initialState: TLoadingState = enabled ? STATES.LOADING : STATES.IDLE;
+  let initialRecord: TRecord<TResponse, TError> = {
     contextKey,
-    variables,
+    args,
+    contextKeyAndArgs,
     response: undefined,
     error: undefined,
     promise: undefined,
@@ -69,18 +71,24 @@ export function getAsyncStore<TResponse, TError>(
   ////////////////////////////////////////////////////////////////////////
 
   if (contextKey && enabled) {
-    recordCache.set(cacheKey, initialRecord, { fetchStrategy });
+    storeCache.set(contextKeyAndArgs, initialRecord, { cacheStrategy, fetchStrategy });
   }
 
   ////////////////////////////////////////////////////////////////////////
 
-  function setVariables(variables) {
-    store.update((record) => ({ ...record, variables }));
+  function setArgs(args: TArgs = []) {
+    const contextKeyAndArgs = [contextKey, args] as any;
+    store.update((record) => ({ ...record, args, contextKeyAndArgs }));
   }
 
   function setStale() {
-    const cachedRecord = recordCache.get(cacheKey, { fetchStrategy });
-    store.update((record) => ({ ...record, ...cachedRecord }));
+    const cachedRecord = storeCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+    store.update((record) => ({
+      ...record,
+      ...cachedRecord,
+      args: record.args,
+      contextKeyAndArgs: record.contextKeyAndArgs,
+    }));
   }
 
   function setLoading() {
@@ -101,16 +109,24 @@ export function getAsyncStore<TResponse, TError>(
   }
 
   function setData(
-    { localInvokeCount, setCache, slowConnectionTimeout },
-    { response = undefined, error = undefined, state }
+    { isBroadcast, localArgs, localInvokeCount, setCache, slowConnectionTimeout }: TSetDataOpts,
+    { responseOrResponseFn, error, state }: TSetDataRecord<TResponse, TError>
   ) {
     if (slowConnectionTimeout) {
       clearTimeout(slowConnectionTimeout);
     }
 
-    if (localInvokeCount && invokeCount !== localInvokeCount) return;
+    if (isBroadcast && JSON.stringify(localArgs) !== JSON.stringify(args)) return;
+    if (!isBroadcast && invokeCount !== localInvokeCount) return;
 
     const record = get(store);
+
+    let response = responseOrResponseFn;
+    if (typeof response === 'function') {
+      // @ts-ignore
+      response = responseOrResponseFn(record.response) as TResponse;
+    }
+
     const newRecord = {
       ...record,
       error,
@@ -120,45 +136,52 @@ export function getAsyncStore<TResponse, TError>(
     };
 
     if (setCache) {
-      recordCache.set(cacheKey, newRecord, { fetchStrategy });
+      storeCache.set(contextKeyAndArgs, newRecord, { cacheStrategy, fetchStrategy });
     }
 
     store.set(newRecord);
   }
 
-  function setSuccess({ localInvokeCount, isBroadcast = false, slowConnectionTimeout }, response) {
+  function setSuccess(
+    { isBroadcast, localArgs, localInvokeCount, slowConnectionTimeout }: TSetSuccessOpts,
+    responseOrResponseFn: TResponseOrResponseFn<TResponse>
+  ) {
     const setCache = !mutate;
 
-    setData({ localInvokeCount, setCache, slowConnectionTimeout }, { response, state: STATES.SUCCESS });
+    setData(
+      { isBroadcast, localArgs, localInvokeCount, setCache, slowConnectionTimeout },
+      { error: undefined, responseOrResponseFn, state: STATES.SUCCESS }
+    );
 
     if (!isBroadcast) {
       if (invalidateOnSuccess) {
-        invalidateCache(cacheKey);
+        storeCache.invalidate(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
       } else {
-        broadcastChanges(cacheKey, response);
+        storeCache.broadcastChanges(contextKeyAndArgs, responseOrResponseFn, { cacheStrategy, fetchStrategy });
       }
     }
   }
 
-  function setError({ localInvokeCount, slowConnectionTimeout }, error) {
-    setData({ localInvokeCount, setCache: false, slowConnectionTimeout }, { error, state: STATES.ERROR });
+  function setError({ localInvokeCount, slowConnectionTimeout }: TSetErrorOpts, error: TError) {
+    setData(
+      { localInvokeCount, setCache: false, slowConnectionTimeout },
+      { error, state: STATES.ERROR }
+    );
   }
 
   ////////////////////////////////////////////////////////////////////////
 
-  function invoke(...variables) {
-    variables = variables.filter(
-      (arg: any) => arg.constructor.name !== 'Class' && !arg.constructor.name.includes('Event')
-    );
+  function invoke(...args: TArgs) {
+    args = args.filter((arg: any) => arg.constructor.name !== 'Class' && !arg.constructor.name.includes('Event'));
 
-    setVariables(variables);
+    setArgs(args);
 
     if (!defer && fetchStrategy !== FETCH_STRATEGIES.FETCH_ONLY) {
       setStale();
     }
 
     if (fetchStrategy === FETCH_STRATEGIES.CACHE_FIRST) {
-      const cachedRecord = recordCache.get(cacheKey, { fetchStrategy });
+      const cachedRecord = storeCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
       if (cachedRecord?.isSuccess) {
         return;
       }
@@ -169,39 +192,44 @@ export function getAsyncStore<TResponse, TError>(
     invokeCount = invokeCount + 1;
     const localInvokeCount = invokeCount;
 
-    fn(...variables)
-      .then((response) => setSuccess({ localInvokeCount, slowConnectionTimeout }, response))
+    fn(...args)
+      .then((response) => setSuccess({ localArgs: args, localInvokeCount, slowConnectionTimeout }, response))
       .catch((error) => setError({ localInvokeCount, slowConnectionTimeout }, error));
   }
 
   if (enabled) {
-    invoke(...initialRecord.variables);
+    invoke(...initialRecord.args);
   }
 
   ////////////////////////////////////////////////////////////////////////
 
-  store.subscribe(({ variables }) => {
+  store.subscribe(({ args: _args, contextKeyAndArgs: _contextKeyAndArgs }) => {
     if (!mutate) {
-      cacheKey = utils.getCacheKey({ contextKey, variables, cacheStrategy });
+      args = _args;
+      contextKeyAndArgs = _contextKeyAndArgs;
     }
 
     if (!hasUpdater && !invalidateOnSuccess) {
       hasUpdater = true;
-      const updaters = updaterCache.get(cacheKey);
+      const cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
+      const updaters = storeCache.updaters.get(cacheKey);
       let updater = { invoke: mutate ? null : invoke, setSuccess };
       if (updaters) {
         const newUpdaters = [...updaters, updater];
-        updaterCache.set(cacheKey, newUpdaters);
+        storeCache.updaters.set(cacheKey, newUpdaters);
       } else {
-        updaterCache.set(cacheKey, [updater]);
+        storeCache.updaters.set(cacheKey, [updater]);
       }
     }
   });
 
   onDestroy(() => {
-    const updaters = updaterCache.get(cacheKey);
-    const newUpdaters = updaters.filter((updater: any) => updater.setSuccess !== setSuccess);
-    updaterCache.set(cacheKey, newUpdaters);
+    const cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
+    const updaters = storeCache.updaters.get(cacheKey);
+    if (updaters) {
+      const newUpdaters = updaters.filter((updater: any) => updater.setSuccess !== setSuccess);
+      storeCache.updaters.set(cacheKey, newUpdaters);
+    }
   });
 
   ////////////////////////////////////////////////////////////////////////
@@ -209,8 +237,7 @@ export function getAsyncStore<TResponse, TError>(
   const decoratedStore = {
     ...store,
     invoke,
-    setError,
-    setSuccess,
+    setSuccess: (data: TResponse) => setSuccess({ isBroadcast: false }, data),
   };
   return decoratedStore;
 }
