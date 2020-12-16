@@ -7,7 +7,7 @@ export type TCacheProvider = {
 };
 export type TCacheStrategy = 'context-and-args' | 'context-only';
 export type TContextKey = string;
-export type TContextKeyAndArgs = TContextKey | [TContextKey, TArgs];
+export type TContextKeyAndArgs = TContextKey | [TContextKey, TArgs] | null;
 export type TLoadingState =
   | 'idle'
   | 'loading'

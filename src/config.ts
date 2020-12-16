@@ -1,4 +1,5 @@
 import { FETCH_STRATEGIES, CACHE_STRATEGIES } from './constants';
+import type { TConfig } from './types';
 
 export let globalConfig = {
   cacheStrategy: CACHE_STRATEGIES.CONTEXT_AND_ARGS,
@@ -6,7 +7,7 @@ export let globalConfig = {
   timeToSlowConnection: 3000
 };
 
-export function setConfig(config) {
+export function setConfig<TResponse, TError>(config: TConfig<TResponse, TError>) {
   globalConfig = {
     ...globalConfig,
     ...config,

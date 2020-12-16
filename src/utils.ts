@@ -13,7 +13,7 @@ export function getStateVariables(state: TLoadingState, prevState: TLoadingState
   };
 }
 
-export function getContextKeyAndArgs(contextKeyAndArgs: TContextKeyAndArgs): [TContextKey, TArgs] {
+export function getContextKeyAndArgs(contextKeyAndArgs: TContextKeyAndArgs | null): [TContextKey, TArgs] {
   let contextKey = contextKeyAndArgs as string;
   let args: TArgs = [];
   if (Array.isArray(contextKeyAndArgs)) {
