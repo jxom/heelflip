@@ -63,8 +63,8 @@ export type TConfig<TResponse, TError> = {
   fetchStrategy?: TFetchStrategy,
   invalidateOnSuccess?: boolean;
   mutate?: boolean,
-  onError?: (error: TError) => void;
-  onSuccess?: (response: TResponse) => void;
+  onError?: (error: TError | undefined) => void;
+  onSuccess?: (response: TResponse | undefined) => void;
   pollingInterval?: number;
   pollWhile?: boolean | ((record: TRecord<TResponse, TError>) => boolean);
   pollWhenHidden?: boolean;

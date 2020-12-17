@@ -36,6 +36,8 @@ export function getAsyncStore<TResponse, TError>(
     dedupeManualInvoke,
     enabled: initialEnabled = true,
     fetchStrategy,
+    onError,
+    onSuccess,
     mutate,
     invalidateOnSuccess,
     timeToSlowConnection,
@@ -131,6 +133,13 @@ export function getAsyncStore<TResponse, TError>(
       response = responseOrResponseFn(record.response) as TResponse;
     }
 
+    if (state === STATES.SUCCESS) {
+      onSuccess?.(response);
+    }
+    if (state === STATES.ERROR) {
+      onError?.(error);
+    }
+
     const newRecord = {
       error,
       response,
@@ -181,6 +190,7 @@ export function getAsyncStore<TResponse, TError>(
         setStale();
       }
 
+      // Deduping logic
       if (dedupingInterval > 0) {
         const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
         if (cachedRecord) {
@@ -191,6 +201,7 @@ export function getAsyncStore<TResponse, TError>(
         }
       }
 
+      // Cache-first logic
       if (fetchStrategy === FETCH_STRATEGIES.CACHE_FIRST) {
         const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
         if (cachedRecord?.isSuccess) {
@@ -198,6 +209,7 @@ export function getAsyncStore<TResponse, TError>(
         }
       }
 
+      // Debouncing logic
       if (shouldDebounce) {
         if (debounceTimeout) {
           clearTimeout(debounceTimeout);
