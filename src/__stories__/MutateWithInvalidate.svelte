@@ -1,17 +1,17 @@
 <script>
-  import { asyncStore } from '../index.ts';
+  import { boomerang } from '../index.ts';
   import todoApi from './api/todo';
 
   let todoTitle;
 
   let getTodos = async () => todoApi.getAll();
-  let todosStore = asyncStore.fetch('todos-invalidate', getTodos);
+  let todosStore = boomerang.fetch('todos-invalidate', getTodos);
 
   let createTodo = async ({ title }) => todoApi.create({ title }, { returnsItems: false });
-  let createTodoStore = asyncStore.mutate('todos-invalidate', createTodo, { invalidateOnSuccess: true });
+  let createTodoStore = boomerang.mutate('todos-invalidate', createTodo, { invalidateOnSuccess: true });
 
   let deleteTodo = async (id) => todoApi.delete(id, { returnsItems: false });
-  let deleteTodoStore = asyncStore.mutate('todos-invalidate', deleteTodo, { invalidateOnSuccess: true });
+  let deleteTodoStore = boomerang.mutate('todos-invalidate', deleteTodo, { invalidateOnSuccess: true });
 </script>
 
 <div>

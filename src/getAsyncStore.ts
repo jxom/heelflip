@@ -2,7 +2,7 @@ import { get, writable } from 'svelte/store';
 import { onDestroy } from 'svelte';
 
 import { globalConfig } from './config';
-import { storeCache } from './cache';
+import { recordCache } from './cache';
 import { CACHE_STRATEGIES, FETCH_STRATEGIES, STATES } from './constants';
 import * as utils from './utils';
 import type {
@@ -44,7 +44,7 @@ export function getAsyncStore<TResponse, TError>(
   let hasUpdater = false;
   let contextKeyAndArgs = initialContextKeyAndArgs;
   let args = initialArgs;
-  const cachedRecord = storeCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+  const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
   const enabled = !defer && initialEnabled;
 
   ////////////////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ export function getAsyncStore<TResponse, TError>(
   ////////////////////////////////////////////////////////////////////////
 
   if (contextKey && enabled) {
-    storeCache.set(contextKeyAndArgs, initialRecord, { cacheStrategy, fetchStrategy });
+    recordCache.set(contextKeyAndArgs, initialRecord, { cacheStrategy, fetchStrategy });
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -82,7 +82,7 @@ export function getAsyncStore<TResponse, TError>(
   }
 
   function setStale() {
-    const cachedRecord = storeCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+    const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
     store.update((record) => ({
       ...record,
       ...cachedRecord,
@@ -136,7 +136,7 @@ export function getAsyncStore<TResponse, TError>(
     };
 
     if (setCache) {
-      storeCache.set(contextKeyAndArgs, newRecord, { cacheStrategy, fetchStrategy });
+      recordCache.set(contextKeyAndArgs, newRecord, { cacheStrategy, fetchStrategy });
     }
 
     store.set(newRecord);
@@ -155,9 +155,9 @@ export function getAsyncStore<TResponse, TError>(
 
     if (!isBroadcast) {
       if (invalidateOnSuccess) {
-        storeCache.invalidate(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+        recordCache.invalidate(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
       } else {
-        storeCache.broadcastChanges(contextKeyAndArgs, responseOrResponseFn, { cacheStrategy, fetchStrategy });
+        recordCache.broadcastChanges(contextKeyAndArgs, responseOrResponseFn, { cacheStrategy, fetchStrategy });
       }
     }
   }
@@ -181,7 +181,7 @@ export function getAsyncStore<TResponse, TError>(
     }
 
     if (fetchStrategy === FETCH_STRATEGIES.CACHE_FIRST) {
-      const cachedRecord = storeCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+      const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
       if (cachedRecord?.isSuccess) {
         return;
       }
@@ -212,23 +212,23 @@ export function getAsyncStore<TResponse, TError>(
     if (!hasUpdater && !invalidateOnSuccess) {
       hasUpdater = true;
       const cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
-      const updaters = storeCache.updaters.get(cacheKey);
+      const updaters = recordCache.updaters.get(cacheKey);
       let updater = { invoke: mutate ? null : invoke, setSuccess };
       if (updaters) {
         const newUpdaters = [...updaters, updater];
-        storeCache.updaters.set(cacheKey, newUpdaters);
+        recordCache.updaters.set(cacheKey, newUpdaters);
       } else {
-        storeCache.updaters.set(cacheKey, [updater]);
+        recordCache.updaters.set(cacheKey, [updater]);
       }
     }
   });
 
   onDestroy(() => {
     const cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
-    const updaters = storeCache.updaters.get(cacheKey);
+    const updaters = recordCache.updaters.get(cacheKey);
     if (updaters) {
       const newUpdaters = updaters.filter((updater: any) => updater.setSuccess !== setSuccess);
-      storeCache.updaters.set(cacheKey, newUpdaters);
+      recordCache.updaters.set(cacheKey, newUpdaters);
     }
   });
 

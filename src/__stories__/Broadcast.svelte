@@ -1,11 +1,11 @@
 <script>
-  import { asyncStore } from '../index.ts';
+  import { boomerang } from '../index.ts';
 
   let getRepos = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
 
-  let firstStore = asyncStore.fetch('characters', getRepos, { enabled: false });
-  let secondStore = asyncStore.fetch('characters', getRepos, { enabled: false });
-  let thirdStore = asyncStore.fetch('characters', getRepos, { enabled: false });
+  let firstStore = boomerang.fetch('characters', getRepos, { enabled: false });
+  let secondStore = boomerang.fetch('characters', getRepos, { enabled: false });
+  let thirdStore = boomerang.fetch('characters', getRepos, { enabled: false });
 </script>
 
 <div>

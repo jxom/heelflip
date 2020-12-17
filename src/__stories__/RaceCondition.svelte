@@ -1,5 +1,5 @@
 <script>
-  import { asyncStore } from '../index.ts';
+  import { boomerang } from '../index.ts';
 
   let users = {
     0: {
@@ -18,7 +18,7 @@
     })
   };
 
-  let store = asyncStore.fetch('users', getUser, { enabled: false });
+  let store = boomerang.fetch('users', getUser, { enabled: false });
 
   $: {
     console.log($store);

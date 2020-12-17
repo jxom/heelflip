@@ -1,17 +1,17 @@
 <script>
-  import { asyncStore } from '../index.ts';
+  import { boomerang } from '../index.ts';
   import todoApi from './api/todo';
 
   let todoTitle;
 
   let getTodos = async () => todoApi.getAll();
-  let todosStore = asyncStore.fetch('todos', getTodos);
+  let todosStore = boomerang.fetch('todos', getTodos);
 
   let createTodo = async ({ title }) => todoApi.create({ title }, { returnsItems: true });
-  let createTodoStore = asyncStore.mutate('todos', createTodo);
+  let createTodoStore = boomerang.mutate('todos', createTodo);
 
   let deleteTodo = async (id) => todoApi.delete(id, { returnsItems: true });
-  let deleteTodoStore = asyncStore.mutate('todos', deleteTodo);
+  let deleteTodoStore = boomerang.mutate('todos', deleteTodo);
 </script>
 
 <div>

@@ -1,8 +1,8 @@
 <script>
-  import { asyncStore } from '../index.ts';
+  import { boomerang } from '../index.ts';
 
   let getThing = async () => new Promise((res) => setTimeout(() => res('This is a slow response'), 5000));
-  let store = asyncStore.fetchDeferred('thing', getThing);
+  let store = boomerang.deferredFetch('thing', getThing);
 
   $: {
     console.log($store);

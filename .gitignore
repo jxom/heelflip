@@ -10,5 +10,6 @@ yarn.lock
 /getDeferredAsyncStore
 /getAsyncStore
 /constants
+/config
 /cache
-/asyncStore
+/boomerang

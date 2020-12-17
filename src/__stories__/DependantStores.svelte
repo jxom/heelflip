@@ -1,13 +1,13 @@
 <script>
-  import { asyncStore } from '../index.ts';
+  import { boomerang } from '../index.ts';
 
   let id = 1;
 
   let getCharacter = async ({ id }) => fetch(`https://rickandmortyapi.com/api/character/${id}`).then((res) => res.json());
-  let characterStore = asyncStore.fetch(['character', [{ id }]], getCharacter);
+  let characterStore = boomerang.fetch(['character', [{ id }]], getCharacter);
 
   let getLocation = async ({ locationUrl }) => fetch(locationUrl).then((res) => res.json());
-  let locationStore = asyncStore.fetch('location', getLocation, { enabled: false });
+  let locationStore = boomerang.fetch('location', getLocation, { enabled: false });
 
   $: {
     if ($characterStore.response) {

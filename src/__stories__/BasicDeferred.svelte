@@ -1,8 +1,8 @@
 <script>
-  import { asyncStore } from '../index.ts';
+  import { boomerang } from '../index.ts';
 
   let getCharacters = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
-  let store = asyncStore.fetchDeferred('characters', getCharacters);
+  let store = boomerang.deferredFetch('characters', getCharacters);
 
   $: {
     console.log($store);

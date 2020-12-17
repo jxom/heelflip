@@ -1,10 +1,10 @@
 <script>
-  import { asyncStore, storeCache } from '../index.ts';
+  import { boomerang, cache } from '../index.ts';
 
   let username = 'rick';
   let getCharacters = async ({ username }) =>
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
-  let store = asyncStore.fetch(['characters', [{ username }]], getCharacters);
+  let store = boomerang.fetch(['characters', [{ username }]], getCharacters);
 
   $: {
     console.log($store);
@@ -13,7 +13,7 @@
 
 <div>
   <h1>Characters</h1>
-  <button on:click={() => storeCache.invalidate(['characters', [{ username: 'rick' }]])}>
+  <button on:click={() => cache.invalidate(['characters', [{ username: 'rick' }]])}>
     {#if $store.isReloading}Invalidating...{:else}Invalidate{/if}
   </button>
   {#if $store.isLoading}

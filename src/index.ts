@@ -1,2 +1,2 @@
-export * from './cache';
-export { asyncStore, asyncStore as default } from './asyncStore';
+export { recordCache as cache } from './cache';
+export { boomerang, boomerang as default } from './boomerang';
