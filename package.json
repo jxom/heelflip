@@ -1,6 +1,6 @@
 {
   "name": "svelte-boomerang",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A utility to help with fetching, mutating and caching async data in Svelte",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -40,8 +40,8 @@
     "@rollup/plugin-typescript": "8.0.0",
     "@storybook/addon-actions": "^6.1.8",
     "@storybook/addon-essentials": "^6.1.8",
-    "@storybook/addon-links": "^6.1.8",
     "@storybook/addon-info": "5.3.21",
+    "@storybook/addon-links": "^6.1.8",
     "@storybook/svelte": "^6.1.8",
     "@sveltejs/eslint-config": "sveltejs/eslint-config",
     "@tsconfig/svelte": "^1.0.10",
