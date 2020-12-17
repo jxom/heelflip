@@ -1,5 +1,5 @@
-import { FETCH_STRATEGIES } from "./constants";
-import type { TContextKeyAndArgs } from "./types";
+import { FETCH_STRATEGIES } from './constants';
+import type { TContextKeyAndArgs } from './types';
 import * as utils from './utils';
 
 export const recordCache = {
@@ -11,24 +11,24 @@ export const recordCache = {
     let cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
 
     if (fetchStrategy === FETCH_STRATEGIES.FETCH_ONLY) return;
-    
+
     return this.records.get(cacheKey);
   },
   set(contextKeyAndArgs: TContextKeyAndArgs, value: any, opts: any = {}) {
     const { cacheStrategy, fetchStrategy } = opts;
-    
+
     let cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
 
     if (fetchStrategy === FETCH_STRATEGIES.FETCH_ONLY) return;
 
     return this.records.set(cacheKey, {
-      updatedAt: new Date(),
       ...value,
+      updatedAt: new Date(),
     });
   },
   upsert(contextKeyAndArgs: TContextKeyAndArgs, value: any, opts: any = {}) {
     const { cacheStrategy, fetchStrategy } = opts;
-    
+
     let cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
 
     if (fetchStrategy === FETCH_STRATEGIES.FETCH_ONLY) return;
@@ -36,18 +36,19 @@ export const recordCache = {
     const currentValue = this.records.get(cacheKey);
     return this.records.set(cacheKey, {
       ...currentValue,
-      updatedAt: new Date(),
       ...value,
+      updatedAt: new Date(),
     });
   },
   invalidate(contextKeyAndArgs: TContextKeyAndArgs, opts: any = {}) {
     const { cacheStrategy } = opts;
 
     let cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
-    
+
     const [_, args] = utils.getContextKeyAndArgs(contextKeyAndArgs);
 
     const updaters = this.updaters.get(cacheKey);
+    console.log(updaters);
     if (updaters) {
       updaters.forEach((updater: any) => updater.invoke?.(...args));
     }
@@ -64,5 +65,5 @@ export const recordCache = {
   },
   setSuccess(contextKeyAndArgs: TContextKeyAndArgs, data: any, opts: any = {}) {
     this.broadcastChanges(contextKeyAndArgs, data, opts);
-  }
+  },
 };

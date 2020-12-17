@@ -56,9 +56,9 @@ export type TConfig<TResponse, TError> = {
   cacheStrategy?: TCacheStrategy;
   cacheTime?: number;
   defer?: boolean;
-  debounce?: number;
+  debounceInterval?: number;
   dedupingInterval?: number;
-  dedupeManualLoad?: boolean;
+  dedupeManualInvoke?: boolean;
   enabled?: boolean;
   fetchStrategy?: TFetchStrategy,
   invalidateOnSuccess?: boolean;

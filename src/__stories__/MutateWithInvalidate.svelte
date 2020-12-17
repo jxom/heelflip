@@ -12,6 +12,10 @@
 
   let deleteTodo = async (id) => todoApi.delete(id, { returnsItems: false });
   let deleteTodoStore = boomerang.mutate('todos-invalidate', deleteTodo, { invalidateOnSuccess: true });
+
+  $: {
+    console.log($todosStore);
+  }
 </script>
 
 <div>

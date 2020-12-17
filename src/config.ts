@@ -3,6 +3,9 @@ import type { TConfig } from './types';
 
 export let globalConfig = {
   cacheStrategy: CACHE_STRATEGIES.CONTEXT_AND_ARGS,
+  debounceInterval: 0,
+  dedupingInterval: 500,
+  dedupeManualInvoke: true,
   fetchStrategy: FETCH_STRATEGIES.CACHE_AND_FETCH,
   timeToSlowConnection: 3000
 };

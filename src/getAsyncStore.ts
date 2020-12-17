@@ -31,6 +31,9 @@ export function getAsyncStore<TResponse, TError>(
   const {
     cacheStrategy,
     defer,
+    debounceInterval,
+    dedupingInterval,
+    dedupeManualInvoke,
     enabled: initialEnabled = true,
     fetchStrategy,
     mutate,
@@ -40,6 +43,7 @@ export function getAsyncStore<TResponse, TError>(
 
   ////////////////////////////////////////////////////////////////////////
 
+  let debounceTimeout: number | undefined = undefined;
   let invokeCount = 0;
   let hasUpdater = false;
   let contextKeyAndArgs = initialContextKeyAndArgs;
@@ -109,7 +113,7 @@ export function getAsyncStore<TResponse, TError>(
   }
 
   function setData(
-    { isBroadcast, localArgs, localInvokeCount, setCache, slowConnectionTimeout }: TSetDataOpts,
+    { isBroadcast, localArgs = [], localInvokeCount, setCache, slowConnectionTimeout }: TSetDataOpts,
     { responseOrResponseFn, error, state }: TSetDataRecord<TResponse, TError>
   ) {
     if (slowConnectionTimeout) {
@@ -128,7 +132,6 @@ export function getAsyncStore<TResponse, TError>(
     }
 
     const newRecord = {
-      ...record,
       error,
       response,
       state,
@@ -136,10 +139,10 @@ export function getAsyncStore<TResponse, TError>(
     };
 
     if (setCache) {
-      recordCache.set(contextKeyAndArgs, newRecord, { cacheStrategy, fetchStrategy });
+      recordCache.upsert(contextKeyAndArgs, newRecord, { cacheStrategy, fetchStrategy });
     }
 
-    store.set(newRecord);
+    store.set({ ...record, ...newRecord });
   }
 
   function setSuccess(
@@ -163,42 +166,63 @@ export function getAsyncStore<TResponse, TError>(
   }
 
   function setError({ localInvokeCount, slowConnectionTimeout }: TSetErrorOpts, error: TError) {
-    setData(
-      { localInvokeCount, setCache: false, slowConnectionTimeout },
-      { error, state: STATES.ERROR }
-    );
+    setData({ localInvokeCount, setCache: false, slowConnectionTimeout }, { error, state: STATES.ERROR });
   }
 
   ////////////////////////////////////////////////////////////////////////
 
-  function invoke(...args: TArgs) {
-    args = args.filter((arg: any) => arg.constructor.name !== 'Class' && !arg.constructor.name.includes('Event'));
+  function invoke({ isManualInvoke = false, shouldDebounce = debounceInterval > 0 } = {}) {
+    return (...args: TArgs) => {
+      args = args.filter((arg: any) => arg.constructor.name !== 'Class' && !arg.constructor.name.includes('Event'));
 
-    setArgs(args);
+      setArgs(args);
 
-    if (!defer && fetchStrategy !== FETCH_STRATEGIES.FETCH_ONLY) {
-      setStale();
-    }
+      if (!defer && fetchStrategy !== FETCH_STRATEGIES.FETCH_ONLY) {
+        setStale();
+      }
 
-    if (fetchStrategy === FETCH_STRATEGIES.CACHE_FIRST) {
-      const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
-      if (cachedRecord?.isSuccess) {
+      if (dedupingInterval > 0) {
+        const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+        if (cachedRecord) {
+          const isDuplicate =
+            // @ts-ignore
+            Math.abs(new Date() - cachedRecord.invokedAt) < dedupingInterval && (!isManualInvoke || dedupeManualInvoke);
+          if (isDuplicate) return;
+        }
+      }
+
+      if (fetchStrategy === FETCH_STRATEGIES.CACHE_FIRST) {
+        const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+        if (cachedRecord?.isSuccess) {
+          return;
+        }
+      }
+
+      if (shouldDebounce) {
+        if (debounceTimeout) {
+          clearTimeout(debounceTimeout);
+        }
+        debounceTimeout = setTimeout(() => invoke({ shouldDebounce: false })(...args), debounceInterval);
         return;
       }
-    }
 
-    const { slowConnectionTimeout } = setLoading();
+      const { slowConnectionTimeout } = setLoading();
 
-    invokeCount = invokeCount + 1;
-    const localInvokeCount = invokeCount;
+      invokeCount = invokeCount + 1;
+      const localInvokeCount = invokeCount;
 
-    fn(...args)
-      .then((response) => setSuccess({ localArgs: args, localInvokeCount, slowConnectionTimeout }, response))
-      .catch((error) => setError({ localInvokeCount, slowConnectionTimeout }, error));
+      if (contextKeyAndArgs) {
+        recordCache.upsert(contextKeyAndArgs, { invokedAt: new Date() }, { cacheStrategy, fetchStrategy });
+      }
+
+      fn(...args)
+        .then((response) => setSuccess({ localArgs: args, localInvokeCount, slowConnectionTimeout }, response))
+        .catch((error) => setError({ localInvokeCount, slowConnectionTimeout }, error));
+    };
   }
 
   if (enabled) {
-    invoke(...initialRecord.args);
+    invoke()(...initialRecord.args);
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -213,7 +237,7 @@ export function getAsyncStore<TResponse, TError>(
       hasUpdater = true;
       const cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
       const updaters = recordCache.updaters.get(cacheKey);
-      let updater = { invoke: mutate ? null : invoke, setSuccess };
+      let updater = { invoke: mutate ? null : (...args: TArgs) => invoke()(...args), setSuccess };
       if (updaters) {
         const newUpdaters = [...updaters, updater];
         recordCache.updaters.set(cacheKey, newUpdaters);
@@ -236,7 +260,7 @@ export function getAsyncStore<TResponse, TError>(
 
   const decoratedStore = {
     ...store,
-    invoke,
+    invoke: (...args: TArgs) => invoke({ isManualInvoke: true })(...args),
     setSuccess: (data: TResponse) => setSuccess({ isBroadcast: false }, data),
   };
   return decoratedStore;

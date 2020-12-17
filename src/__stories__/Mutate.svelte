@@ -12,6 +12,10 @@
 
   let deleteTodo = async (id) => todoApi.delete(id, { returnsItems: true });
   let deleteTodoStore = boomerang.mutate('todos', deleteTodo);
+
+  $: {
+    console.log($todosStore);
+  }
 </script>
 
 <div>
