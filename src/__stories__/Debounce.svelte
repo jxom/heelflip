@@ -15,9 +15,6 @@
 <div>
   <div style="display: flex;">
     <input bind:value={username} />
-    {#if $charactersStore.isReloading}
-      Loading...
-    {/if}
   </div>
   {#if $charactersStore.isLoading}
     <p>Loading...</p>

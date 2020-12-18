@@ -7,6 +7,7 @@ export let globalConfig = {
   dedupingInterval: 500,
   dedupeManualInvoke: true,
   fetchStrategy: FETCH_STRATEGIES.CACHE_AND_FETCH,
+  pollOnMount: true,
   timeToSlowConnection: 3000
 };
 

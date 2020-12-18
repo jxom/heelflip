@@ -38,6 +38,9 @@ export function getAsyncStore<TResponse, TError>(
     fetchStrategy,
     onError,
     onSuccess,
+    pollingInterval,
+    pollOnMount,
+    pollWhile,
     mutate,
     invalidateOnSuccess,
     timeToSlowConnection,
@@ -239,6 +242,50 @@ export function getAsyncStore<TResponse, TError>(
 
   ////////////////////////////////////////////////////////////////////////
 
+  let interval: any = undefined;
+
+  function startPolling() {
+    if (!interval && pollingInterval && pollingInterval > 0) {
+      interval = setInterval(() => {
+        invoke({ isManualInvoke: true })(...args);
+      }, pollingInterval);
+      store.update((record) => ({ ...record, isPolling: true }));
+    }
+  }
+
+  function stopPolling() {
+    store.update((record) => ({ ...record, isPolling: false }));
+    if (interval) {
+      clearInterval(interval);
+      interval = undefined;
+    }
+  }
+
+  if (!interval && pollOnMount) {
+    startPolling();
+  }
+
+  store.subscribe((record) => {
+    if (pollWhile) {
+      let shouldPoll = typeof pollWhile === 'function' && pollWhile(record);
+
+      if (interval && !shouldPoll) {
+        stopPolling();
+      }
+
+      if (!interval && shouldPoll) {
+        console.log('starting2');
+        startPolling();
+      }
+    }
+  });
+
+  onDestroy(() => {
+    stopPolling();
+  });
+
+  ////////////////////////////////////////////////////////////////////////
+
   store.subscribe(({ args: _args, contextKeyAndArgs: _contextKeyAndArgs }) => {
     if (!mutate) {
       args = _args;
@@ -274,6 +321,8 @@ export function getAsyncStore<TResponse, TError>(
     ...store,
     invoke: (...args: TArgs) => invoke({ isManualInvoke: true })(...args),
     setSuccess: (data: TResponse) => setSuccess({ isBroadcast: false }, data),
+    startPolling,
+    stopPolling,
   };
   return decoratedStore;
 }
