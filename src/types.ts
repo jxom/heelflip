@@ -69,7 +69,7 @@ export type TConfig<TResponse, TError> = {
   pollingInterval?: number;
   pollOnMount?: boolean;
   pollWhile?: boolean | ((record: TRecord<TResponse, TError>) => boolean);
-  // revalidateTime?: number;
+  staleTime?: number;
   // revalidateOnWindowFocus?: boolean;
   timeToSlowConnection?: number;
 };

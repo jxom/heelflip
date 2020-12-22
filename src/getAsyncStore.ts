@@ -36,13 +36,14 @@ export function getAsyncStore<TResponse, TError>(
     dedupeManualInvoke,
     enabled: initialEnabled = true,
     fetchStrategy,
+    invalidateOnSuccess,
     onError,
     onSuccess,
     pollingInterval,
     pollOnMount,
     pollWhile,
     mutate,
-    invalidateOnSuccess,
+    staleTime,
     timeToSlowConnection,
   } = { ...globalConfig, ...config };
 
@@ -128,10 +129,10 @@ export function getAsyncStore<TResponse, TError>(
     if (isBroadcast && JSON.stringify(localArgs) !== JSON.stringify(args)) return;
     if (!isBroadcast && invokeCount !== localInvokeCount) return;
 
-    const record = get(store);
-
+    
     let response = responseOrResponseFn;
     if (typeof response === 'function') {
+      const record = get(store);
       // @ts-ignore
       response = responseOrResponseFn(record.response) as TResponse;
     }
@@ -143,7 +144,7 @@ export function getAsyncStore<TResponse, TError>(
       onError?.(error);
     }
 
-    const newRecord = {
+    const updatedRecord = {
       error,
       response,
       state,
@@ -151,10 +152,10 @@ export function getAsyncStore<TResponse, TError>(
     };
 
     if (setCache) {
-      recordCache.upsert(contextKeyAndArgs, newRecord, { cacheStrategy, fetchStrategy });
+      recordCache.upsert(contextKeyAndArgs, updatedRecord, { cacheStrategy, fetchStrategy });
     }
 
-    store.set({ ...record, ...newRecord });
+    store.update(record => ({ ...record, ...updatedRecord }));
   }
 
   function setSuccess(
@@ -207,7 +208,8 @@ export function getAsyncStore<TResponse, TError>(
       // Cache-first logic
       if (fetchStrategy === FETCH_STRATEGIES.CACHE_FIRST) {
         const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
-        if (cachedRecord?.isSuccess) {
+        const isNotStale = staleTime === 0 || Date.now() - cachedRecord.invokedAt < staleTime;
+        if (cachedRecord?.isSuccess && isNotStale) {
           return;
         }
       }
