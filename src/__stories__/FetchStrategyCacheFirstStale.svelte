@@ -5,7 +5,10 @@
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
 
   let username = 'rick';
-  const store = boomerang.fetch(['characters-cache-first', [{ username }]], getCharacters, { fetchStrategy: 'cache-first', staleTime: 5000 });
+  const store = boomerang.fetch(['characters-cache-first', [{ username }]], getCharacters, {
+    fetchStrategy: 'cache-first',
+    staleTime: 5000,
+  });
 
   function handleClickFetch() {
     store.invoke({ username });

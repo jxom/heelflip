@@ -129,7 +129,6 @@ export function getAsyncStore<TResponse, TError>(
     if (isBroadcast && JSON.stringify(localArgs) !== JSON.stringify(args)) return;
     if (!isBroadcast && invokeCount !== localInvokeCount) return;
 
-    
     let response = responseOrResponseFn;
     if (typeof response === 'function') {
       const record = get(store);
@@ -155,7 +154,7 @@ export function getAsyncStore<TResponse, TError>(
       recordCache.upsert(contextKeyAndArgs, updatedRecord, { cacheStrategy, fetchStrategy });
     }
 
-    store.update(record => ({ ...record, ...updatedRecord }));
+    store.update((record) => ({ ...record, ...updatedRecord }));
   }
 
   function setSuccess(

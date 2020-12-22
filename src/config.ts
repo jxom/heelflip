@@ -9,12 +9,12 @@ export let globalConfig = {
   fetchStrategy: FETCH_STRATEGIES.CACHE_AND_FETCH,
   pollOnMount: true,
   staleTime: 300000,
-  timeToSlowConnection: 3000
+  timeToSlowConnection: 3000,
 };
 
 export function setConfig<TResponse, TError>(config: TConfig<TResponse, TError>) {
   globalConfig = {
     ...globalConfig,
     ...config,
-  }
+  };
 }

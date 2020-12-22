@@ -1,7 +1,8 @@
 <script>
   import { boomerang } from '../index.ts';
 
-  const getCharacters = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
+  const getCharacters = async () =>
+    fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
   const store = boomerang.deferredFetch('characters', getCharacters);
 
   $: {
@@ -11,9 +12,7 @@
 
 <div>
   <h1>Characters</h1>
-  {#if $store.isIdle}
-    <button on:click={store.invoke}>Load</button>
-  {/if}
+  {#if $store.isIdle}<button on:click={store.invoke}>Load</button>{/if}
   {#if $store.isLoading}
     <p>Loading...</p>
   {/if}

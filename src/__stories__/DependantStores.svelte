@@ -3,7 +3,8 @@
 
   const id = 1;
 
-  const getCharacter = async ({ id }) => fetch(`https://rickandmortyapi.com/api/character/${id}`).then((res) => res.json());
+  const getCharacter = async ({ id }) =>
+    fetch(`https://rickandmortyapi.com/api/character/${id}`).then((res) => res.json());
   const characterStore = boomerang.fetch(['character', [{ id }]], getCharacter);
 
   const getLocation = async ({ locationUrl }) => fetch(locationUrl).then((res) => res.json());
@@ -29,11 +30,10 @@
     <p>Loading...</p>
   {/if}
   {#if $characterStore.isSuccess}
-    Name: {$characterStore.response.name}
+    Name:
+    {$characterStore.response.name}
     <br />
-    {#if $locationStore.isSuccess}
-      Location: {$locationStore.response.name}
-    {/if}
+    {#if $locationStore.isSuccess}Location: {$locationStore.response.name}{/if}
   {/if}
   {#if $characterStore.isError}
     <p>Awwies</p>

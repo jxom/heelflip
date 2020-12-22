@@ -8,8 +8,12 @@ export function getStateVariables(state: TLoadingState, prevState: TLoadingState
     isLoadingSlow: state === STATES.LOADING_SLOW,
     isReloading: state === STATES.RELOADING || state === STATES.RELOADING_SLOW,
     isReloadingSlow: state === STATES.RELOADING_SLOW,
-    isSuccess: state === STATES.SUCCESS || ((state === STATES.RELOADING || state === STATES.RELOADING_SLOW) && prevState === STATES.SUCCESS),
-    isError: state === STATES.ERROR || ((state === STATES.RELOADING || state === STATES.RELOADING_SLOW) && prevState === STATES.ERROR),
+    isSuccess:
+      state === STATES.SUCCESS ||
+      ((state === STATES.RELOADING || state === STATES.RELOADING_SLOW) && prevState === STATES.SUCCESS),
+    isError:
+      state === STATES.ERROR ||
+      ((state === STATES.RELOADING || state === STATES.RELOADING_SLOW) && prevState === STATES.ERROR),
   };
 }
 
@@ -24,7 +28,7 @@ export function getContextKeyAndArgs(contextKeyAndArgs: TContextKeyAndArgs | nul
 
 export function getCacheKey({
   contextKeyAndArgs,
-  cacheStrategy = CACHE_STRATEGIES.CONTEXT_AND_ARGS
+  cacheStrategy = CACHE_STRATEGIES.CONTEXT_AND_ARGS,
 }: {
   contextKeyAndArgs: TContextKeyAndArgs;
   cacheStrategy: TCacheStrategy;

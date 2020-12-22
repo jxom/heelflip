@@ -13,9 +13,7 @@
 </script>
 
 <div>
-  <div style="display: flex;">
-    <input bind:value={username} />
-  </div>
+  <div style="display: flex;"><input bind:value={username} /></div>
   {#if $charactersStore.isLoading}
     <p>Loading...</p>
   {/if}

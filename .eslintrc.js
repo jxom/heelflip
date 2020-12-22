@@ -11,6 +11,7 @@ module.exports = {
   },
   rules: {
     'no-unused-vars': 'warn',
+    'comma-dangle': 'off',
   },
   overrides: [
     {

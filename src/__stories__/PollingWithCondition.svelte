@@ -2,14 +2,17 @@
   import { boomerang } from '../index.ts';
 
   const response = {
-    pending: true
+    pending: true,
   };
   setTimeout(() => {
     response.pending = false;
   }, 10000);
 
   const getCharacters = async () => response;
-  const store = boomerang.fetch('characters', getCharacters, { pollingInterval: 5000, pollWhile: record => record.response && record.response.pending });
+  const store = boomerang.fetch('characters', getCharacters, {
+    pollingInterval: 5000,
+    pollWhile: (record) => record.response && record.response.pending,
+  });
 
   $: {
     console.log($store);

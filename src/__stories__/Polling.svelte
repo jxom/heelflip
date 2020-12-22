@@ -1,7 +1,8 @@
 <script>
   import { boomerang } from '../index.ts';
 
-  const getCharacters = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
+  const getCharacters = async () =>
+    fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
   const store = boomerang.fetch('characters', getCharacters, { pollingInterval: 5000 });
 
   $: {
@@ -11,7 +12,10 @@
 
 <div>
   <h1>Characters</h1>
-  <p>Polling every 5 seconds {#if $store.isReloading}- Reloading...{/if}</p>
+  <p>
+    Polling every 5 seconds
+    {#if $store.isReloading}- Reloading...{/if}
+  </p>
   {#if $store.isLoading}
     <p>Loading...</p>
   {/if}

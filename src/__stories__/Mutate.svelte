@@ -25,20 +25,16 @@
   {/if}
   {#if $todosStore.isSuccess}
     <input bind:value={todoTitle} />
-    <button 
+    <button
       on:click={() => {
         createTodoStore.invoke({ title: todoTitle });
         todoTitle = '';
-      }}
-    >
+      }}>
       add
-  </button>
+    </button>
     <ul>
       {#each $todosStore.response as todo}
-        <li>
-          {todo.title}
-          <button on:click={() => deleteTodoStore.invoke(todo.id)}>Delete</button>
-        </li>
+        <li>{todo.title} <button on:click={() => deleteTodoStore.invoke(todo.id)}>Delete</button></li>
       {/each}
     </ul>
   {/if}
