@@ -4,7 +4,6 @@ module.exports = {
     node: true,
     es2021: true,
   },
-  plugins: ['prettier', 'svelte3'],
   extends: ['eslint:recommended'],
   parserOptions: {
     ecmaVersion: 12,
@@ -12,20 +11,20 @@ module.exports = {
   },
   rules: {
     'no-unused-vars': 'warn',
-    'prettier/prettier': [
-      'error',
-      {
-        bracketSpacing: true,
-        jsxBracketSameLine: false,
-        printWidth: 120,
-        singleQuote: true,
-      },
-    ],
   },
   overrides: [
     {
-      files: ['*.svelte'],
-      processor: 'svelte3/svelte3',
+      files: ['**/*.svelte'],
+      extends: '@sveltejs',
+    },
+    {
+      files: ['**/*.ts', '**/*.tsx'],
+      parser: '@typescript-eslint/parser',
+      plugins: ['typescript'],
+      rules: {
+        'no-undef': 'off',
+        'no-unused-vars': 'off',
+      },
     },
   ],
 };

@@ -1,8 +1,8 @@
 <script>
   import { boomerang } from '../index.ts';
 
-  let getCharacters = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
-  let store = boomerang.fetch('characters', getCharacters, { onSuccess: response => console.log('onSuccess', response) });
+  const getCharacters = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
+  const store = boomerang.fetch('characters', getCharacters, { onSuccess: response => console.log('onSuccess', response) });
 
   $: {
     console.log($store);

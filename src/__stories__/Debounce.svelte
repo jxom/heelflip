@@ -1,14 +1,14 @@
 <script>
   import { boomerang } from '../index.ts';
 
-  let getCharacters = async ({ username }) =>
+  const getCharacters = async ({ username }) =>
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
 
   let username = 'rick';
-  let charactersStore = boomerang.fetch(['characters', [{ username }]], getCharacters, { debounceInterval: 1000 });
+  const charactersStore = boomerang.fetch(['characters', [{ username }]], getCharacters, { debounceInterval: 1000 });
 
   $: {
-    charactersStore.invoke({ username })
+    charactersStore.invoke({ username });
   }
 </script>
 

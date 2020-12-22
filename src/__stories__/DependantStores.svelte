@@ -1,13 +1,13 @@
 <script>
   import { boomerang } from '../index.ts';
 
-  let id = 1;
+  const id = 1;
 
-  let getCharacter = async ({ id }) => fetch(`https://rickandmortyapi.com/api/character/${id}`).then((res) => res.json());
-  let characterStore = boomerang.fetch(['character', [{ id }]], getCharacter);
+  const getCharacter = async ({ id }) => fetch(`https://rickandmortyapi.com/api/character/${id}`).then((res) => res.json());
+  const characterStore = boomerang.fetch(['character', [{ id }]], getCharacter);
 
-  let getLocation = async ({ locationUrl }) => fetch(locationUrl).then((res) => res.json());
-  let locationStore = boomerang.fetch('location', getLocation, { enabled: false });
+  const getLocation = async ({ locationUrl }) => fetch(locationUrl).then((res) => res.json());
+  const locationStore = boomerang.fetch('location', getLocation, { enabled: false });
 
   $: {
     if ($characterStore.response) {

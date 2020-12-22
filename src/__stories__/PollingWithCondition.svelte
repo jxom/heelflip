@@ -3,13 +3,13 @@
 
   const response = {
     pending: true
-  }
+  };
   setTimeout(() => {
-    response.pending = false
+    response.pending = false;
   }, 10000);
 
-  let getCharacters = async () => response;
-  let store = boomerang.fetch('characters', getCharacters, { pollingInterval: 5000, pollWhile: record => record.response && record.response.pending });
+  const getCharacters = async () => response;
+  const store = boomerang.fetch('characters', getCharacters, { pollingInterval: 5000, pollWhile: record => record.response && record.response.pending });
 
   $: {
     console.log($store);

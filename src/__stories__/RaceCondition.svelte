@@ -1,7 +1,7 @@
 <script>
   import { boomerang } from '../index.ts';
 
-  let users = {
+  const users = {
     0: {
       name: 'Jake'
     },
@@ -11,14 +11,14 @@
     2: {
       name: 'Peter'
     }
-  }
-  let getUser = async (id) => {
+  };
+  const getUser = async (id) => {
     return new Promise(res => {
       setTimeout(() => res(users[id]), id * 1000);
-    })
+    });
   };
 
-  let store = boomerang.fetch('users', getUser, { enabled: false });
+  const store = boomerang.fetch('users', getUser, { enabled: false });
 
   $: {
     console.log($store);

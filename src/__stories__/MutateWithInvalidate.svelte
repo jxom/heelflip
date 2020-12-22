@@ -4,14 +4,14 @@
 
   let todoTitle;
 
-  let getTodos = async () => todoApi.getAll();
-  let todosStore = boomerang.fetch('todos-invalidate', getTodos);
+  const getTodos = async () => todoApi.getAll();
+  const todosStore = boomerang.fetch('todos-invalidate', getTodos);
 
-  let createTodo = async ({ title }) => todoApi.create({ title }, { returnsItems: false });
-  let createTodoStore = boomerang.mutate('todos-invalidate', createTodo, { invalidateOnSuccess: true });
+  const createTodo = async ({ title }) => todoApi.create({ title }, { returnsItems: false });
+  const createTodoStore = boomerang.mutate('todos-invalidate', createTodo, { invalidateOnSuccess: true });
 
-  let deleteTodo = async (id) => todoApi.delete(id, { returnsItems: false });
-  let deleteTodoStore = boomerang.mutate('todos-invalidate', deleteTodo, { invalidateOnSuccess: true });
+  const deleteTodo = async (id) => todoApi.delete(id, { returnsItems: false });
+  const deleteTodoStore = boomerang.mutate('todos-invalidate', deleteTodo, { invalidateOnSuccess: true });
 
   $: {
     console.log($todosStore);

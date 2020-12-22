@@ -4,14 +4,14 @@
 
   let todoTitle;
 
-  let getTodos = async () => todoApi.getAll();
-  let todosStore = boomerang.fetch('todos', getTodos);
+  const getTodos = async () => todoApi.getAll();
+  const todosStore = boomerang.fetch('todos', getTodos);
 
-  let createTodo = async ({ title }) => todoApi.create({ title }, { returnsItems: true });
-  let createTodoStore = boomerang.mutate('todos', createTodo);
+  const createTodo = async ({ title }) => todoApi.create({ title }, { returnsItems: true });
+  const createTodoStore = boomerang.mutate('todos', createTodo);
 
-  let deleteTodo = async (id) => todoApi.delete(id, { returnsItems: true });
-  let deleteTodoStore = boomerang.mutate('todos', deleteTodo);
+  const deleteTodo = async (id) => todoApi.delete(id, { returnsItems: true });
+  const deleteTodoStore = boomerang.mutate('todos', deleteTodo);
 
   $: {
     console.log($todosStore);

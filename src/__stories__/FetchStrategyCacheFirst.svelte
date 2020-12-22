@@ -1,11 +1,11 @@
 <script>
   import { boomerang } from '../index.ts';
 
-  let getCharacters = async ({ username }) =>
+  const getCharacters = async ({ username }) =>
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
 
   let username = 'rick';
-  let store = boomerang.fetch(['characters-cache-first', [{ username }]], getCharacters, { fetchStrategy: 'cache-first' });
+  const store = boomerang.fetch(['characters-cache-first', [{ username }]], getCharacters, { fetchStrategy: 'cache-first' });
 
   function handleClickFetch() {
     store.invoke({ username });
