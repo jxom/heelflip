@@ -65,4 +65,16 @@ export const recordCache = {
   setSuccess(contextKeyAndArgs: TContextKeyAndArgs, data: any, opts: any = {}) {
     this.broadcastChanges(contextKeyAndArgs, data, opts);
   },
+  getAll() {
+    let records: { [key: string]: any } = {};
+    this.records.forEach((value, key) => {
+      records[key] = value;
+    });
+    return records;
+  },
+  restore(recordsObject: any) {
+    Object.entries(recordsObject).forEach(([key, value]) => {
+      this.records.set(key, value);
+    });
+  },
 };

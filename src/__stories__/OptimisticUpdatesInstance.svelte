@@ -27,7 +27,7 @@
     <input bind:value={todoTitle} />
     <button
       on:click={() => {
-        todosStore.setSuccess((response) => [...response, { id: response.length + 1, title: todoTitle }]);
+        todosStore.setSuccess((todos) => [...todos, { id: todos.length + 1, title: todoTitle }]);
         createTodoStore.invoke({ title: todoTitle });
         todoTitle = '';
       }}>
@@ -35,7 +35,14 @@
     </button>
     <ul>
       {#each $todosStore.response as todo}
-        <li>{todo.title} <button on:click={() => deleteTodoStore.invoke(todo.id)}>Delete</button></li>
+        <li>
+          {todo.title}
+          <button
+            on:click={() => {
+              todosStore.setSuccess((todos) => todos.filter(t => t.id !== todo.id));
+              deleteTodoStore.invoke(todo.id);
+            }}>Delete</button>
+        </li>
       {/each}
     </ul>
   {/if}

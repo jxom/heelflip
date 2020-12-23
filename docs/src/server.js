@@ -2,6 +2,7 @@ import sirv from 'sirv';
 import polka from 'polka';
 import compression from 'compression';
 import * as sapper from '@sapper/server';
+import { boomerangCache } from 'svelte-boomerang';
 
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
@@ -11,10 +12,9 @@ polka() // You can also use Express
     compression({ threshold: 0 }),
     sirv('static', { dev }),
     sapper.middleware({
-      session: (req, res) => {
-        console.log(req);
-        return { test: 'session' };
-      },
+      session: () => ({
+        boomerangCache,
+      }),
     })
   )
   .listen(PORT, (err) => {

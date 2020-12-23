@@ -1,5 +1,5 @@
 <script>
-  import { boomerang, cache } from '../index.ts';
+  import { boomerang, boomerangCache } from '../index.ts';
 
   const username = 'rick';
   const getCharacters = async ({ username }) =>
@@ -13,7 +13,7 @@
 
 <div>
   <h1>Characters</h1>
-  <button on:click={() => cache.invalidate(['characters', [{ username: 'rick' }]])}>
+  <button on:click={() => boomerangCache.invalidate(['characters', [{ username: 'rick' }]])}>
     {#if $store.isReloading}Invalidating...{:else}Invalidate{/if}
   </button>
   {#if $store.isLoading}

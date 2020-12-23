@@ -1,5 +1,5 @@
 <script>
-  import { boomerang, cache } from '../index.ts';
+  import { boomerang, boomerangCache } from '../index.ts';
   import todoApi from './api/todo';
 
   let todoTitle;
@@ -27,7 +27,7 @@
     <input bind:value={todoTitle} />
     <button
       on:click={() => {
-        cache.setSuccess('todos', (response) => [...response, { id: response.length + 1, title: todoTitle }]);
+        boomerangCache.setSuccess('todos', (todos) => [...todos, { id: todos.length + 1, title: todoTitle }]);
         createTodoStore.invoke({ title: todoTitle });
         todoTitle = '';
       }}>
@@ -35,7 +35,14 @@
     </button>
     <ul>
       {#each $todosStore.response as todo}
-        <li>{todo.title} <button on:click={() => deleteTodoStore.invoke(todo.id)}>Delete</button></li>
+        <li>
+          {todo.title}
+          <button
+            on:click={() => {
+              boomerangCache.setSuccess('todos', (todos) => todos.filter((t) => t.id !== todo.id));
+              deleteTodoStore.invoke(todo.id);
+            }}>Delete</button>
+        </li>
       {/each}
     </ul>
   {/if}

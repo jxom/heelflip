@@ -2,6 +2,7 @@
   import { getCharacters } from '../utils/api';
 
   export async function preload(page, session) {
+    session.boomerangCache.set('test', { test: 'test' });
     const characters = await getCharacters({ fetch: this.fetch });
     return { characters };
   }
@@ -9,8 +10,13 @@
 
 <script>
   import boomerang from 'svelte-boomerang';
+  import { stores } from '@sapper/app';
 
   export let characters;
+
+  const { session } = stores();
+
+  console.log('cache', $session.boomerangCache);
 
   const store = boomerang.fetch('characters', getCharacters, { initialResponse: characters });
 </script>
