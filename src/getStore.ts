@@ -37,6 +37,7 @@ export function getStore<TResponse, TError>(
     enabled: initialEnabled = true,
     errorRetryInterval,
     fetchStrategy,
+    initialResponse,
     invalidateOnSuccess,
     onError,
     onSuccess,
@@ -61,12 +62,15 @@ export function getStore<TResponse, TError>(
 
   ////////////////////////////////////////////////////////////////////////
 
-  const initialState: TLoadingState = enabled ? STATES.LOADING : STATES.IDLE;
+  let initialState: TLoadingState = enabled ? STATES.LOADING : STATES.IDLE;
+  if (enabled && initialResponse) {
+    initialState = STATES.SUCCESS;
+  }
   let initialRecord: TRecord<TResponse, TError> = {
     contextKey,
     args,
     contextKeyAndArgs,
-    response: undefined,
+    response: initialResponse,
     error: undefined,
     promise: undefined,
     state: initialState,

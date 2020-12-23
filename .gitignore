@@ -7,8 +7,8 @@ yarn.lock
 /ts
 /utils
 /types
-/getDeferredStore
 /getStore
+/getDeferredStore
 /constants
 /config
 /cache

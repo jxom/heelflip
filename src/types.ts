@@ -55,6 +55,7 @@ export type TConfig<TResponse, TError> = {
   enabled?: boolean;
   errorRetryInterval?: number | ((count: number) => number);
   fetchStrategy?: TFetchStrategy;
+  initialResponse?: TResponse;
   invalidateOnSuccess?: boolean;
   mutate?: boolean;
   onError?: (error: TError | undefined) => void;

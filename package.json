@@ -18,9 +18,6 @@
   },
   "author": "Jake Moxey",
   "license": "MIT",
-  "peerDependencies": {
-    "svelte": ">=3.0.0"
-  },
   "devDependencies": {
     "@babel/cli": "7.8.4",
     "@babel/core": "7.9.6",
