@@ -19,7 +19,7 @@ import type {
   TArgs,
 } from './types';
 
-export function getAsyncStore<TResponse, TError>(
+export function getStore<TResponse, TError>(
   initialContextKeyAndArgs: TContextKeyAndArgs,
   fn: TFn<TResponse>,
   config: TConfig<TResponse, TError> = {}

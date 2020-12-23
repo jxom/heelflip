@@ -1,7 +1,7 @@
-import { getAsyncStore } from './getAsyncStore';
+import { getStore } from './getStore';
 import type { TConfig, TFn, TContextKeyAndArgs } from './types';
 
-export function getDeferredAsyncStore({ mutate = false }) {
+export function getDeferredStore({ mutate = false }) {
   return <TResponse, TError>(
     contextKeyAndArgsOrFn: TContextKeyAndArgs | TFn<TResponse>,
     fnOrConfig?: TFn<TResponse> | TConfig<TResponse, TError>,
@@ -20,6 +20,6 @@ export function getDeferredAsyncStore({ mutate = false }) {
       config = fnOrConfig;
     }
 
-    return getAsyncStore<TResponse, TError>(contextKeyAndArgs, fn, { ...config, defer: true, mutate });
+    return getStore<TResponse, TError>(contextKeyAndArgs, fn, { ...config, defer: true, mutate });
   };
 }
