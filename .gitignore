@@ -13,3 +13,4 @@ yarn.lock
 /config
 /cache
 /boomerang
+.eslintcache
