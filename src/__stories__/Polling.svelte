@@ -12,8 +12,11 @@
 
 <div>
   <h1>Characters</h1>
-  <p>
+  {#if $store.isPolling}
     Polling every 5 seconds
+    <button on:click={() => store.stopPolling()}>Stop polling</button>
+  {/if}
+  <p>
     {#if $store.isReloading}- Reloading...{/if}
   </p>
   {#if $store.isLoading}

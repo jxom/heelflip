@@ -48,7 +48,6 @@ export const recordCache = {
     const [_, args] = utils.getContextKeyAndArgs(contextKeyAndArgs);
 
     const updaters = this.updaters.get(cacheKey);
-    console.log(updaters);
     if (updaters) {
       updaters.forEach((updater: any) => updater.invoke?.(...args));
     }

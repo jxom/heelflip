@@ -3,7 +3,7 @@ import { onDestroy } from 'svelte';
 
 import { globalConfig } from './config';
 import { recordCache } from './cache';
-import { CACHE_STRATEGIES, FETCH_STRATEGIES, STATES } from './constants';
+import { FETCH_STRATEGIES, STATES } from './constants';
 import * as utils from './utils';
 import type {
   TContextKeyAndArgs,
@@ -35,6 +35,7 @@ export function getAsyncStore<TResponse, TError>(
     dedupingInterval,
     dedupeManualInvoke,
     enabled: initialEnabled = true,
+    errorRetryInterval,
     fetchStrategy,
     invalidateOnSuccess,
     onError,
@@ -50,6 +51,7 @@ export function getAsyncStore<TResponse, TError>(
   ////////////////////////////////////////////////////////////////////////
 
   let debounceTimeout: number | undefined = undefined;
+  let errorTimeout: number | undefined = undefined;
   let invokeCount = 0;
   let hasUpdater = false;
   let contextKeyAndArgs = initialContextKeyAndArgs;
@@ -183,7 +185,7 @@ export function getAsyncStore<TResponse, TError>(
 
   ////////////////////////////////////////////////////////////////////////
 
-  function invoke({ isManualInvoke = false, shouldDebounce = debounceInterval > 0 } = {}) {
+  function invoke({ force = false, isManualInvoke = false, shouldDebounce = debounceInterval > 0 } = {}) {
     return (...args: TArgs) => {
       args = args.filter((arg: any) => arg.constructor.name !== 'Class' && !arg.constructor.name.includes('Event'));
 
@@ -194,7 +196,7 @@ export function getAsyncStore<TResponse, TError>(
       }
 
       // Deduping logic
-      if (dedupingInterval > 0) {
+      if (dedupingInterval > 0 && !force) {
         const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
         if (cachedRecord) {
           const isDuplicate =
@@ -205,7 +207,7 @@ export function getAsyncStore<TResponse, TError>(
       }
 
       // Cache-first logic
-      if (fetchStrategy === FETCH_STRATEGIES.CACHE_FIRST) {
+      if (fetchStrategy === FETCH_STRATEGIES.CACHE_FIRST && !force) {
         const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
         const isNotStale = staleTime === 0 || Date.now() - cachedRecord.invokedAt < staleTime;
         if (cachedRecord?.isSuccess && isNotStale) {
@@ -214,7 +216,7 @@ export function getAsyncStore<TResponse, TError>(
       }
 
       // Debouncing logic
-      if (shouldDebounce) {
+      if (shouldDebounce && !force) {
         if (debounceTimeout) {
           clearTimeout(debounceTimeout);
         }
@@ -233,13 +235,29 @@ export function getAsyncStore<TResponse, TError>(
 
       fn(...args)
         .then((response) => setSuccess({ localArgs: args, localInvokeCount, slowConnectionTimeout }, response))
-        .catch((error) => setError({ localInvokeCount, slowConnectionTimeout }, error));
+        .catch((error) => {
+          setError({ localInvokeCount, slowConnectionTimeout }, error);
+          if (errorRetryInterval) {
+            const attemptCount = Math.min(invokeCount || 0, 8);
+            const timeout =
+              typeof errorRetryInterval === 'function'
+                ? errorRetryInterval(attemptCount)
+                : ~~((Math.random() + 0.5) * (1 << attemptCount)) * errorRetryInterval;
+            errorTimeout = setTimeout(() => invoke()(...args), timeout);
+          }
+        });
     };
   }
 
   if (enabled) {
     invoke()(...initialRecord.args);
   }
+
+  onDestroy(() => {
+    if (errorTimeout) {
+      clearTimeout(errorTimeout);
+    }
+  });
 
   ////////////////////////////////////////////////////////////////////////
 
@@ -275,7 +293,6 @@ export function getAsyncStore<TResponse, TError>(
       }
 
       if (!interval && shouldPoll) {
-        console.log('starting2');
         startPolling();
       }
     }
@@ -297,7 +314,7 @@ export function getAsyncStore<TResponse, TError>(
       hasUpdater = true;
       const cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
       const updaters = recordCache.updaters.get(cacheKey);
-      let updater = { invoke: mutate ? null : (...args: TArgs) => invoke()(...args), setSuccess };
+      let updater = { invoke: mutate ? null : (...args: TArgs) => invoke({ force: true })(...args), setSuccess };
       if (updaters) {
         const newUpdaters = [...updaters, updater];
         recordCache.updaters.set(cacheKey, newUpdaters);

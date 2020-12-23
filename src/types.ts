@@ -53,7 +53,7 @@ export type TConfig<TResponse, TError> = {
   dedupingInterval?: number;
   dedupeManualInvoke?: boolean;
   enabled?: boolean;
-  // errorRetryInterval?: number | ((count: number) => number);
+  errorRetryInterval?: number | ((count: number) => number);
   fetchStrategy?: TFetchStrategy;
   invalidateOnSuccess?: boolean;
   mutate?: boolean;
@@ -63,6 +63,5 @@ export type TConfig<TResponse, TError> = {
   pollOnMount?: boolean;
   pollWhile?: boolean | ((record: TRecord<TResponse, TError>) => boolean);
   staleTime?: number;
-  // revalidateOnWindowFocus?: boolean;
   timeToSlowConnection?: number;
 };
