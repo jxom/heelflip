@@ -20,7 +20,7 @@ import { observe } from '../observe';
 export default function fetch<TResponse, TError>(
   initialContextKeyAndArgs: TContextKeyAndArgs,
   fn: TFn<TResponse>,
-  config: TConfig<TResponse, TError>
+  config?: TConfig<TResponse, TError>
 ) {
   const [contextKey, initialArgs] = utils.getContextKeyAndArgs(initialContextKeyAndArgs);
 
@@ -203,10 +203,13 @@ export default function fetch<TResponse, TError>(
 
     if (state === STATES.SUCCESS) {
       onSuccess?.(proxy.record);
+      return response; 
     }
     if (state === STATES.ERROR) {
       onError?.(proxy.record);
+      return error;
     }
+    return;
   }
 
   function setSuccess(
@@ -215,7 +218,7 @@ export default function fetch<TResponse, TError>(
   ) {
     const setCache = !mutate;
 
-    setData(
+    const data = setData(
       { isBroadcast, localArgs, localInvokeCount, setCache, slowConnectionTimeout },
       { error: undefined, responseOrResponseFn, state: STATES.SUCCESS }
     );
@@ -227,10 +230,13 @@ export default function fetch<TResponse, TError>(
         cache.broadcastChanges(contextKeyAndArgs, responseOrResponseFn, { cacheStrategy, fetchStrategy });
       }
     }
+
+    return data;
   }
 
   function setError({ localInvokeCount, slowConnectionTimeout }: TSetErrorOpts, error: TError) {
     setData({ localInvokeCount, setCache: false, slowConnectionTimeout }, { error, state: STATES.ERROR });
+    return error;
   }
 
   function invoke({ force = false, isManualInvoke = false, shouldDebounce = debounceInterval > 0 } = {}) {
@@ -281,7 +287,7 @@ export default function fetch<TResponse, TError>(
         cache.upsert(contextKeyAndArgs, { invokedAt: new Date() }, { cacheStrategy, fetchStrategy });
       }
 
-      fn(...args)
+      return fn(...args)
         .then((response) => setSuccess({ localArgs: args, localInvokeCount, slowConnectionTimeout }, response))
         .catch((error) => {
           setError({ localInvokeCount, slowConnectionTimeout }, error);
@@ -343,6 +349,7 @@ export default function fetch<TResponse, TError>(
   return {
     destroy,
     initialRecord,
+    prefetch: (...args: TArgs) => invoke({ force: true, isManualInvoke: true })(...args),
     invoke: (...args: TArgs) => invoke({ isManualInvoke: true })(...args),
     setSuccess: (data: TResponse) => setSuccess({ isBroadcast: false }, data),
     startPolling,

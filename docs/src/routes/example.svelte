@@ -1,12 +1,13 @@
 <script>
   import heelflip from 'heelflip/svelte';
 
-  const getCharacters = async () => fetch('https://rickandmortyapi.com/api/character').then((res) => res.json());
+  const getCharacters = async () => {
+    if (typeof fetch !== 'undefined') {
+      return fetch('https://rickandmortyapi.com/api/character').then((res) => res.json());
+    }
+    return;
+  } 
   const store = heelflip.fetch('characters', getCharacters);
-
-  $: {
-    console.log($store);
-  }
 </script>
 
 <svelte:head>

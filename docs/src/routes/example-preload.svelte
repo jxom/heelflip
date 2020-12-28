@@ -1,24 +1,15 @@
 <script context="module">
   import { getCharacters } from '../utils/api';
 
-  export async function preload(page, session) {
-    session.heelflipCache.set('test', { test: 'test' });
-    const characters = await getCharacters({ fetch: this.fetch });
-    return { characters };
+  export function preload(page, session) {
+    return heelflip.prefetch('characters', () => getCharacters({ fetch: this.fetch })).then(characters => ({ characters }));
   }
 </script>
 
 <script>
   import heelflip from 'heelflip/svelte';
-  import { stores } from '@sapper/app';
 
-  export let characters;
-
-  const { session } = stores();
-
-  console.log('cache', $session.heelflipCache);
-
-  const store = heelflip.fetch('characters', getCharacters, { initialResponse: characters });
+  const store = heelflip.fetch('characters', getCharacters);
 </script>
 
 <svelte:head>
