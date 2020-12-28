@@ -1,17 +1,17 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
   import todoApi from './api/todo';
 
   let todoTitle;
 
   const getTodos = async () => todoApi.getAll();
-  const todosStore = boomerang.fetch('todos-invalidate', getTodos);
+  const todosStore = heelflip.fetch('todos-invalidate', getTodos);
 
   const createTodo = async ({ title }) => todoApi.create({ title }, { returnsItems: false });
-  const createTodoStore = boomerang.mutate('todos-invalidate', createTodo, { invalidateOnSuccess: true });
+  const createTodoStore = heelflip.mutate('todos-invalidate', createTodo, { invalidateOnSuccess: true });
 
   const deleteTodo = async (id) => todoApi.delete(id, { returnsItems: false });
-  const deleteTodoStore = boomerang.mutate('todos-invalidate', deleteTodo, { invalidateOnSuccess: true });
+  const deleteTodoStore = heelflip.mutate('todos-invalidate', deleteTodo, { invalidateOnSuccess: true });
 
   $: {
     console.log($todosStore);

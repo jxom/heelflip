@@ -1,8 +1,8 @@
-import { FETCH_STRATEGIES } from './constants';
-import type { TContextKeyAndArgs } from './types';
-import * as utils from './utils';
+import { FETCH_STRATEGIES } from '../constants';
+import type { TContextKeyAndArgs } from '../types';
+import * as utils from '../utils';
 
-export const recordCache = {
+export default {
   records: new Map(),
   updaters: new Map(),
   get(contextKeyAndArgs: TContextKeyAndArgs, opts: any = {}) {

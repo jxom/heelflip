@@ -1,11 +1,11 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
 
   const getRepos = async () => fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
 
-  const firstStore = boomerang.fetch('characters', getRepos, { enabled: false });
-  const secondStore = boomerang.fetch('characters', getRepos, { enabled: false });
-  const thirdStore = boomerang.fetch('characters', getRepos, { enabled: false });
+  const firstStore = heelflip.fetch('characters', getRepos, { enabled: false });
+  const secondStore = heelflip.fetch('characters', getRepos, { enabled: false });
+  const thirdStore = heelflip.fetch('characters', getRepos, { enabled: false });
 </script>
 
 <div>

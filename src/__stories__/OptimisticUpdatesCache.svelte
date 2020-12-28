@@ -1,17 +1,18 @@
 <script>
-  import { boomerang, boomerangCache } from '../index.ts';
+  import heelflip from '../svelte';
+  import heelflipCache from '../cache';
   import todoApi from './api/todo';
 
   let todoTitle;
 
   const getTodos = async () => todoApi.getAll();
-  const todosStore = boomerang.fetch('todos', getTodos);
+  const todosStore = heelflip.fetch('todos', getTodos);
 
   const createTodo = async ({ title }) => todoApi.create({ title }, { returnsItems: true });
-  const createTodoStore = boomerang.mutate('todos', createTodo);
+  const createTodoStore = heelflip.mutate('todos', createTodo);
 
   const deleteTodo = async (id) => todoApi.delete(id, { returnsItems: true });
-  const deleteTodoStore = boomerang.mutate('todos', deleteTodo);
+  const deleteTodoStore = heelflip.mutate('todos', deleteTodo);
 
   $: {
     console.log($todosStore);
@@ -27,7 +28,7 @@
     <input bind:value={todoTitle} />
     <button
       on:click={() => {
-        boomerangCache.setSuccess('todos', (todos) => [...todos, { id: todos.length + 1, title: todoTitle }]);
+        heelflipCache.setSuccess('todos', (todos) => [...todos, { id: todos.length + 1, title: todoTitle }]);
         createTodoStore.invoke({ title: todoTitle });
         todoTitle = '';
       }}>
@@ -39,7 +40,7 @@
           {todo.title}
           <button
             on:click={() => {
-              boomerangCache.setSuccess('todos', (todos) => todos.filter((t) => t.id !== todo.id));
+              heelflipCache.setSuccess('todos', (todos) => todos.filter((t) => t.id !== todo.id));
               deleteTodoStore.invoke(todo.id);
             }}>Delete</button>
         </li>

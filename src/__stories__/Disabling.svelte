@@ -1,11 +1,11 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
 
   const getCharacters = async ({ username }) =>
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
 
   let username = 'rick';
-  const charactersStore = boomerang.fetch(['characters', [{ username }]], getCharacters, { enabled: false });
+  const charactersStore = heelflip.fetch(['characters', [{ username }]], getCharacters, { enabled: false });
 
   function handleClickFetch() {
     charactersStore.invoke({ username });

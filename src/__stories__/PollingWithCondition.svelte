@@ -1,5 +1,5 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
 
   const response = {
     pending: true,
@@ -9,7 +9,7 @@
   }, 10000);
 
   const getCharacters = async () => response;
-  const store = boomerang.fetch('characters', getCharacters, {
+  const store = heelflip.fetch('characters', getCharacters, {
     pollingInterval: 5000,
     pollWhile: (record) => record.response && record.response.pending,
   });

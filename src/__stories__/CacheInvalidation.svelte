@@ -1,10 +1,11 @@
 <script>
-  import { boomerang, boomerangCache } from '../index.ts';
+  import heelflip from '../svelte';
+  import heelflipCache from '../cache';
 
   const username = 'rick';
   const getCharacters = async ({ username }) =>
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
-  const store = boomerang.fetch(['characters', [{ username }]], getCharacters);
+  const store = heelflip.fetch(['characters', [{ username }]], getCharacters);
 
   $: {
     console.log($store);
@@ -13,7 +14,7 @@
 
 <div>
   <h1>Characters</h1>
-  <button on:click={() => boomerangCache.invalidate(['characters', [{ username: 'rick' }]])}>
+  <button on:click={() => heelflipCache.invalidate(['characters', [{ username: 'rick' }]])}>
     {#if $store.isReloading}Invalidating...{:else}Invalidate{/if}
   </button>
   {#if $store.isLoading}

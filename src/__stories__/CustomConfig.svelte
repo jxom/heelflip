@@ -1,12 +1,12 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
 
-  boomerang.setConfig({
+  heelflip.setConfig({
     timeToSlowConnection: 1000,
   });
 
   const getThing = async () => new Promise((res) => setTimeout(() => res('This is a slow response'), 3000));
-  const store = boomerang.deferredFetch('thing', getThing);
+  const store = heelflip.deferredFetch('thing', getThing);
 
   $: {
     console.log($store);

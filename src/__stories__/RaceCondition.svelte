@@ -1,5 +1,5 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
 
   const users = {
     0: {
@@ -18,7 +18,7 @@
     });
   };
 
-  const store = boomerang.fetch('users', getUser, { enabled: false });
+  const store = heelflip.fetch('users', getUser, { enabled: false });
 
   $: {
     console.log($store);

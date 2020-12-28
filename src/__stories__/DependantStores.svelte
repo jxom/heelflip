@@ -1,14 +1,14 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
 
   const id = 1;
 
   const getCharacter = async ({ id }) =>
     fetch(`https://rickandmortyapi.com/api/character/${id}`).then((res) => res.json());
-  const characterStore = boomerang.fetch(['character', [{ id }]], getCharacter);
+  const characterStore = heelflip.fetch(['character', [{ id }]], getCharacter);
 
   const getLocation = async ({ locationUrl }) => fetch(locationUrl).then((res) => res.json());
-  const locationStore = boomerang.fetch('location', getLocation, { enabled: false });
+  const locationStore = heelflip.fetch('location', getLocation, { enabled: false });
 
   $: {
     if ($characterStore.response) {

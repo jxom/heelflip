@@ -1,7 +1,6 @@
-import { getStore } from './getStore';
-import type { TConfig, TFn, TContextKeyAndArgs } from './types';
+import type { TConfig, TFn, TContextKeyAndArgs } from '../types';
 
-export function getDeferredStore({ mutate = false }) {
+export default function deferredFetch({ fetch, mutate = false }: { fetch: unknown, mutate: boolean }) {
   return <TResponse, TError>(
     contextKeyAndArgsOrFn: TContextKeyAndArgs | TFn<TResponse>,
     fnOrConfig?: TFn<TResponse> | TConfig<TResponse, TError>,
@@ -20,6 +19,7 @@ export function getDeferredStore({ mutate = false }) {
       config = fnOrConfig;
     }
 
-    return getStore<TResponse, TError>(contextKeyAndArgs, fn, { ...config, defer: true, mutate });
+    // @ts-ignore
+    return fetch<TResponse, TError>(contextKeyAndArgs, fn, { ...config, defer: true, mutate });
   };
 }

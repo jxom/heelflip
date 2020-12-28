@@ -1,10 +1,7 @@
-import { get, writable } from 'svelte/store';
-import { onDestroy } from 'svelte';
-
-import { globalConfig } from './config';
-import { recordCache } from './cache';
-import { FETCH_STRATEGIES, STATES } from './constants';
-import * as utils from './utils';
+import { globalConfig } from '../config';
+import cache from '../cache';
+import { FETCH_STRATEGIES, STATES } from '../constants';
+import * as utils from '../utils';
 import type {
   TContextKeyAndArgs,
   TFn,
@@ -17,12 +14,13 @@ import type {
   TSetErrorOpts,
   TSetSuccessOpts,
   TArgs,
-} from './types';
+} from '../types';
+import { observe } from '../observe';
 
-export function getStore<TResponse, TError>(
+export default function fetch<TResponse, TError>(
   initialContextKeyAndArgs: TContextKeyAndArgs,
   fn: TFn<TResponse>,
-  config: TConfig<TResponse, TError> = {}
+  config: TConfig<TResponse, TError>
 ) {
   const [contextKey, initialArgs] = utils.getContextKeyAndArgs(initialContextKeyAndArgs);
 
@@ -39,6 +37,7 @@ export function getStore<TResponse, TError>(
     fetchStrategy,
     initialResponse,
     invalidateOnSuccess,
+    onLoading,
     onError,
     onSuccess,
     pollingInterval,
@@ -47,17 +46,19 @@ export function getStore<TResponse, TError>(
     mutate,
     staleTime,
     timeToSlowConnection,
+    subscribe,
   } = { ...globalConfig, ...config };
 
   ////////////////////////////////////////////////////////////////////////
 
-  let debounceTimeout: number | undefined = undefined;
-  let errorTimeout: number | undefined = undefined;
-  let invokeCount = 0;
+  let debounceTimeout: any = undefined;
+  let errorTimeout: any = undefined;
   let hasUpdater = false;
+  let invokeCount = 0;
+  let interval: any = undefined;
   let contextKeyAndArgs = initialContextKeyAndArgs;
   let args = initialArgs;
-  const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+  const cachedRecord = cache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
   const enabled = !defer && initialEnabled;
 
   ////////////////////////////////////////////////////////////////////////
@@ -74,6 +75,7 @@ export function getStore<TResponse, TError>(
     error: undefined,
     promise: undefined,
     state: initialState,
+    isPolling: false,
     ...utils.getStateVariables(initialState),
   };
   if (cachedRecord && enabled) {
@@ -82,42 +84,87 @@ export function getStore<TResponse, TError>(
 
   ////////////////////////////////////////////////////////////////////////
 
-  const store = writable(initialRecord);
+  const proxy = observe(initialRecord, {
+    subscribe: (record: TRecord<TResponse, TError>) => {
+      subscribe?.(record);
+
+      const { invokedAt, updatedAt, ...updatedRecord } = record;
+      cache.upsert(contextKeyAndArgs, updatedRecord, { cacheStrategy, fetchStrategy });
+
+      if (!mutate) {
+        args = record.args;
+        contextKeyAndArgs = record.contextKeyAndArgs;
+      }
+
+      if (!hasUpdater && !invalidateOnSuccess) {
+        hasUpdater = true;
+        const cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
+        const updaters = cache.updaters.get(cacheKey);
+        let updater = { invoke: mutate ? null : (...args: TArgs) => invoke({ force: true })(...args), setSuccess };
+        if (updaters) {
+          const newUpdaters = [...updaters, updater];
+          cache.updaters.set(cacheKey, newUpdaters);
+        } else {
+          cache.updaters.set(cacheKey, [updater]);
+        }
+      }
+
+      if (pollWhile) {
+        let shouldPoll = typeof pollWhile === 'function' && pollWhile(record);
+
+        if (interval && record.isPolling && !shouldPoll) {
+          stopPolling();
+        }
+
+        if (!interval && shouldPoll) {
+          startPolling();
+        }
+      }
+    },
+  });
 
   ////////////////////////////////////////////////////////////////////////
 
   if (contextKey && enabled) {
-    recordCache.set(contextKeyAndArgs, initialRecord, { cacheStrategy, fetchStrategy });
+    cache.set(contextKeyAndArgs, initialRecord, { cacheStrategy, fetchStrategy });
   }
 
   ////////////////////////////////////////////////////////////////////////
 
   function setArgs(args: TArgs = []) {
     const contextKeyAndArgs = [contextKey, args] as any;
-    store.update((record) => ({ ...record, args, contextKeyAndArgs }));
+    proxy.record = { ...proxy.record, args, contextKeyAndArgs };
   }
 
   function setStale() {
-    const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
-    store.update((record) => ({
-      ...record,
+    const cachedRecord = cache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+    proxy.record = {
+      ...proxy.record,
       ...cachedRecord,
-      args: record.args,
-      contextKeyAndArgs: record.contextKeyAndArgs,
-    }));
+      args: proxy.record.args,
+      contextKeyAndArgs: proxy.record.contextKeyAndArgs,
+    };
   }
 
   function setLoading() {
-    const record = get(store);
-    const state = record.isIdle || record.isLoading ? STATES.LOADING : STATES.RELOADING;
-    store.set({ ...record, state, ...utils.getStateVariables(state, record.state) });
+    const state = proxy.record.isIdle || proxy.record.isLoading ? STATES.LOADING : STATES.RELOADING;
+    proxy.record = {
+      ...proxy.record,
+      state,
+      ...utils.getStateVariables(state, proxy.record.state),
+    };
 
-    let slowConnectionTimeout;
+    onLoading?.(proxy.record);
+
+    let slowConnectionTimeout: any;
     if (typeof timeToSlowConnection === 'number') {
       slowConnectionTimeout = setTimeout(() => {
-        const record = get(store);
-        const slowState = record.state === STATES.LOADING ? STATES.LOADING_SLOW : STATES.RELOADING_SLOW;
-        store.set({ ...record, state: slowState, ...utils.getStateVariables(slowState, record.state) });
+        const slowState = proxy.record.state === STATES.LOADING ? STATES.LOADING_SLOW : STATES.RELOADING_SLOW;
+        proxy.record = {
+          ...proxy.record,
+          state: slowState,
+          ...utils.getStateVariables(slowState, proxy.record.state),
+        };
       }, timeToSlowConnection);
     }
 
@@ -137,16 +184,8 @@ export function getStore<TResponse, TError>(
 
     let response = responseOrResponseFn;
     if (typeof response === 'function') {
-      const record = get(store);
       // @ts-ignore
-      response = responseOrResponseFn(record.response) as TResponse;
-    }
-
-    if (state === STATES.SUCCESS) {
-      onSuccess?.(response);
-    }
-    if (state === STATES.ERROR) {
-      onError?.(error);
+      response = responseOrResponseFn(proxy.record.response) as TResponse;
     }
 
     const updatedRecord = {
@@ -157,10 +196,17 @@ export function getStore<TResponse, TError>(
     };
 
     if (setCache) {
-      recordCache.upsert(contextKeyAndArgs, updatedRecord, { cacheStrategy, fetchStrategy });
+      cache.upsert(contextKeyAndArgs, updatedRecord, { cacheStrategy, fetchStrategy });
     }
 
-    store.update((record) => ({ ...record, ...updatedRecord }));
+    proxy.record = { ...proxy.record, ...updatedRecord };
+
+    if (state === STATES.SUCCESS) {
+      onSuccess?.(proxy.record);
+    }
+    if (state === STATES.ERROR) {
+      onError?.(proxy.record);
+    }
   }
 
   function setSuccess(
@@ -176,9 +222,9 @@ export function getStore<TResponse, TError>(
 
     if (!isBroadcast) {
       if (invalidateOnSuccess) {
-        recordCache.invalidate(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+        cache.invalidate(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
       } else {
-        recordCache.broadcastChanges(contextKeyAndArgs, responseOrResponseFn, { cacheStrategy, fetchStrategy });
+        cache.broadcastChanges(contextKeyAndArgs, responseOrResponseFn, { cacheStrategy, fetchStrategy });
       }
     }
   }
@@ -186,8 +232,6 @@ export function getStore<TResponse, TError>(
   function setError({ localInvokeCount, slowConnectionTimeout }: TSetErrorOpts, error: TError) {
     setData({ localInvokeCount, setCache: false, slowConnectionTimeout }, { error, state: STATES.ERROR });
   }
-
-  ////////////////////////////////////////////////////////////////////////
 
   function invoke({ force = false, isManualInvoke = false, shouldDebounce = debounceInterval > 0 } = {}) {
     return (...args: TArgs) => {
@@ -201,7 +245,7 @@ export function getStore<TResponse, TError>(
 
       // Deduping logic
       if (dedupingInterval > 0 && !force) {
-        const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+        const cachedRecord = cache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
         if (cachedRecord) {
           const isDuplicate =
             // @ts-ignore
@@ -212,7 +256,7 @@ export function getStore<TResponse, TError>(
 
       // Cache-first logic
       if (fetchStrategy === FETCH_STRATEGIES.CACHE_FIRST && !force) {
-        const cachedRecord = recordCache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+        const cachedRecord = cache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
         const isNotStale = staleTime === 0 || Date.now() - cachedRecord.invokedAt < staleTime;
         if (cachedRecord?.isSuccess && isNotStale) {
           return;
@@ -234,7 +278,7 @@ export function getStore<TResponse, TError>(
       const localInvokeCount = invokeCount;
 
       if (contextKeyAndArgs) {
-        recordCache.upsert(contextKeyAndArgs, { invokedAt: new Date() }, { cacheStrategy, fetchStrategy });
+        cache.upsert(contextKeyAndArgs, { invokedAt: new Date() }, { cacheStrategy, fetchStrategy });
       }
 
       fn(...args)
@@ -253,31 +297,20 @@ export function getStore<TResponse, TError>(
     };
   }
 
-  if (enabled) {
-    invoke()(...initialRecord.args);
-  }
-
-  onDestroy(() => {
-    if (errorTimeout) {
-      clearTimeout(errorTimeout);
-    }
-  });
-
-  ////////////////////////////////////////////////////////////////////////
-
-  let interval: any = undefined;
-
   function startPolling() {
     if (!interval && pollingInterval && pollingInterval > 0) {
       interval = setInterval(() => {
         invoke({ isManualInvoke: true })(...args);
       }, pollingInterval);
-      store.update((record) => ({ ...record, isPolling: true }));
+      proxy.record = {
+        ...proxy.record,
+        isPolling: true,
+      };
     }
   }
 
   function stopPolling() {
-    store.update((record) => ({ ...record, isPolling: false }));
+    proxy.record = { ...proxy.record, isPolling: false };
     if (interval) {
       clearInterval(interval);
       interval = undefined;
@@ -288,63 +321,31 @@ export function getStore<TResponse, TError>(
     startPolling();
   }
 
-  store.subscribe((record) => {
-    if (pollWhile) {
-      let shouldPoll = typeof pollWhile === 'function' && pollWhile(record);
-
-      if (interval && !shouldPoll) {
-        stopPolling();
-      }
-
-      if (!interval && shouldPoll) {
-        startPolling();
-      }
+  function destroy() {
+    if (errorTimeout) {
+      clearTimeout(errorTimeout);
     }
-  });
 
-  onDestroy(() => {
     stopPolling();
-  });
 
-  ////////////////////////////////////////////////////////////////////////
-
-  store.subscribe(({ args: _args, contextKeyAndArgs: _contextKeyAndArgs }) => {
-    if (!mutate) {
-      args = _args;
-      contextKeyAndArgs = _contextKeyAndArgs;
-    }
-
-    if (!hasUpdater && !invalidateOnSuccess) {
-      hasUpdater = true;
-      const cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
-      const updaters = recordCache.updaters.get(cacheKey);
-      let updater = { invoke: mutate ? null : (...args: TArgs) => invoke({ force: true })(...args), setSuccess };
-      if (updaters) {
-        const newUpdaters = [...updaters, updater];
-        recordCache.updaters.set(cacheKey, newUpdaters);
-      } else {
-        recordCache.updaters.set(cacheKey, [updater]);
-      }
-    }
-  });
-
-  onDestroy(() => {
     const cacheKey = utils.getCacheKey({ contextKeyAndArgs, cacheStrategy });
-    const updaters = recordCache.updaters.get(cacheKey);
+    const updaters = cache.updaters.get(cacheKey);
     if (updaters) {
       const newUpdaters = updaters.filter((updater: any) => updater.setSuccess !== setSuccess);
-      recordCache.updaters.set(cacheKey, newUpdaters);
+      cache.updaters.set(cacheKey, newUpdaters);
     }
-  });
+  }
 
-  ////////////////////////////////////////////////////////////////////////
+  if (enabled) {
+    invoke()(...initialArgs);
+  }
 
-  const decoratedStore = {
-    ...store,
+  return {
+    destroy,
+    initialRecord,
     invoke: (...args: TArgs) => invoke({ isManualInvoke: true })(...args),
     setSuccess: (data: TResponse) => setSuccess({ isBroadcast: false }, data),
     startPolling,
     stopPolling,
   };
-  return decoratedStore;
 }

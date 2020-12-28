@@ -1,11 +1,11 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
 
   const getCharacters = async ({ username }) =>
     fetch(`https://rickandmortyapi.com/api/character?name=${username}`).then((res) => res.json());
 
   let username = 'rick';
-  const store = boomerang.fetch(['characters-cache-first', [{ username }]], getCharacters, {
+  const store = heelflip.fetch(['characters-cache-first', [{ username }]], getCharacters, {
     fetchStrategy: 'cache-first',
     staleTime: 5000,
   });

@@ -1,9 +1,9 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
 
   const getCharacters = async () =>
     fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
-  const store = boomerang.fetch('characters', getCharacters);
+  const store = heelflip.fetch('characters', getCharacters);
 
   $: {
     console.log($store);

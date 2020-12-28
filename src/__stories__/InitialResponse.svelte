@@ -1,8 +1,8 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
 
   const getCharacters = async () => fetch('https://rickandmortyapi.com/api/character').then((res) => res.json());
-  const store = boomerang.fetch('characters', getCharacters, {
+  const store = heelflip.fetch('characters', getCharacters, {
     initialResponse: {
       results: [
         {

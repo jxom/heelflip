@@ -2,23 +2,23 @@
   import { getCharacters } from '../utils/api';
 
   export async function preload(page, session) {
-    session.boomerangCache.set('test', { test: 'test' });
+    session.heelflipCache.set('test', { test: 'test' });
     const characters = await getCharacters({ fetch: this.fetch });
     return { characters };
   }
 </script>
 
 <script>
-  import boomerang from 'svelte-boomerang';
+  import heelflip from 'heelflip/svelte';
   import { stores } from '@sapper/app';
 
   export let characters;
 
   const { session } = stores();
 
-  console.log('cache', $session.boomerangCache);
+  console.log('cache', $session.heelflipCache);
 
-  const store = boomerang.fetch('characters', getCharacters, { initialResponse: characters });
+  const store = heelflip.fetch('characters', getCharacters, { initialResponse: characters });
 </script>
 
 <svelte:head>

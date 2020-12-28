@@ -1,5 +1,5 @@
 import { onDestroy } from 'svelte';
-import { boomerangCache } from './index';
+import heelflipCache from '../cache';
 // @ts-ignore
 import serialize from 'serialize-javascript';
 
@@ -9,11 +9,11 @@ export function rehydrate(session: any) {
     onDestroy(() => {
       // Replace apollo client with its cache for serialization
       // session.cache = session.cache.getAll();
-      session.boomerangCache = serialize(session.boomerangCache.getAll());
+      session.heelflipCache = serialize(session.heelflipCache.getAll());
     });
   } else {
-    const deserializedCache = eval('(' + session.boomerangCache + ')');
-    boomerangCache.restore(deserializedCache)
-    session.boomerangCache = boomerangCache;
+    const deserializedCache = eval('(' + session.heelflipCache + ')');
+    heelflipCache.restore(deserializedCache)
+    session.heelflipCache = heelflipCache;
   }
 }

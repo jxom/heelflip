@@ -7,10 +7,9 @@ yarn.lock
 /ts
 /utils
 /types
-/rehydrate
-/getStore
-/getDeferredStore
+/svelte
+/observe
+/core
 /constants
 /config
 /cache
-/boomerang

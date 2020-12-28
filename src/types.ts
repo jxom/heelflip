@@ -21,6 +21,8 @@ export type TRecord<TResponse, TError> = {
   promise: Promise<any> | undefined;
   updatedAt?: Date;
   state: TLoadingState;
+  invokedAt?: Date;
+  isPolling: boolean;
   isIdle: boolean;
   isLoading: boolean;
   isLoadingSlow: boolean;
@@ -58,11 +60,13 @@ export type TConfig<TResponse, TError> = {
   initialResponse?: TResponse;
   invalidateOnSuccess?: boolean;
   mutate?: boolean;
-  onError?: (error: TError | undefined) => void;
-  onSuccess?: (response: TResponse | undefined) => void;
+  onLoading?: (record: TRecord<TResponse, TError>) => void;
+  onError?: (record: TRecord<TResponse, TError>) => void;
+  onSuccess?: (record: TRecord<TResponse, TError>) => void;
   pollingInterval?: number;
   pollOnMount?: boolean;
   pollWhile?: boolean | ((record: TRecord<TResponse, TError>) => boolean);
   staleTime?: number;
+  subscribe?: (record: TRecord<TResponse, TError>) => void;
   timeToSlowConnection?: number;
 };

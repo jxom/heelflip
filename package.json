@@ -1,10 +1,10 @@
 {
-  "name": "svelte-boomerang",
+  "name": "heelflip",
   "version": "0.1.2",
   "description": "A utility to help with fetching, mutating and caching async data in Svelte",
   "main": "lib/index.js",
   "module": "es/index.js",
-  "unpkg": "dist/svelte-boomerang.min.js",
+  "unpkg": "dist/heelflip.min.js",
   "types": "ts/index.d.ts",
   "scripts": {
     "build": "node ./scripts/build.js",

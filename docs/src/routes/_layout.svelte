@@ -1,6 +1,6 @@
 <script>
   import { stores } from '@sapper/app';
-  import { rehydrate } from 'svelte-boomerang/rehydrate';
+  import { rehydrate } from 'heelflip/svelte/rehydrate';
   import Nav from '../components/Nav.svelte';
 
   export let segment;

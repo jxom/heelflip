@@ -1,8 +1,8 @@
 <script>
-  import { boomerang } from '../index.ts';
+  import heelflip from '../svelte';
 
   const getCharacters = async () => new Promise((res, rej) => rej('This is an error'));
-  const store = boomerang.fetch('characters', getCharacters, { onError: (error) => console.log('onError', error) });
+  const store = heelflip.fetch('characters', getCharacters, { onError: (error) => console.log('onError', error) });
 
   $: {
     console.log($store);
