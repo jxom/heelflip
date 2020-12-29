@@ -17,6 +17,37 @@ import type {
 } from '../types';
 import { observe } from '../observe';
 
+export function getInitialRecord<TResponse, TError>(contextKeyAndArgs: TContextKeyAndArgs, config?: TConfig<TResponse, TError>) {
+  const { cacheStrategy, defer, fetchStrategy, enabled: initialEnabled = true, initialResponse } = {
+    ...globalConfig,
+    ...config,
+  };
+  const cachedRecord = cache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
+  const [contextKey, args] = utils.getContextKeyAndArgs(contextKeyAndArgs);
+  const enabled = !defer && initialEnabled;
+
+  let initialState: TLoadingState = enabled ? STATES.LOADING : STATES.IDLE;
+  if (enabled && initialResponse) {
+    initialState = STATES.SUCCESS;
+  }
+  let initialRecord: TRecord<TResponse, TError> = {
+    contextKey,
+    args,
+    contextKeyAndArgs,
+    response: initialResponse,
+    error: undefined,
+    promise: undefined,
+    state: initialState,
+    isPolling: false,
+    ...utils.getStateVariables(initialState),
+  };
+  if (cachedRecord && enabled) {
+    initialRecord = cachedRecord;
+  }
+
+  return initialRecord;
+}
+
 export default function fetch<TResponse, TError>(
   initialContextKeyAndArgs: TContextKeyAndArgs,
   fn: TFn<TResponse>,
@@ -35,7 +66,6 @@ export default function fetch<TResponse, TError>(
     enabled: initialEnabled = true,
     errorRetryInterval,
     fetchStrategy,
-    initialResponse,
     invalidateOnSuccess,
     onLoading,
     onError,
@@ -58,29 +88,11 @@ export default function fetch<TResponse, TError>(
   let interval: any = undefined;
   let contextKeyAndArgs = initialContextKeyAndArgs;
   let args = initialArgs;
-  const cachedRecord = cache.get(contextKeyAndArgs, { cacheStrategy, fetchStrategy });
   const enabled = !defer && initialEnabled;
 
   ////////////////////////////////////////////////////////////////////////
 
-  let initialState: TLoadingState = enabled ? STATES.LOADING : STATES.IDLE;
-  if (enabled && initialResponse) {
-    initialState = STATES.SUCCESS;
-  }
-  let initialRecord: TRecord<TResponse, TError> = {
-    contextKey,
-    args,
-    contextKeyAndArgs,
-    response: initialResponse,
-    error: undefined,
-    promise: undefined,
-    state: initialState,
-    isPolling: false,
-    ...utils.getStateVariables(initialState),
-  };
-  if (cachedRecord && enabled) {
-    initialRecord = cachedRecord;
-  }
+  const initialRecord = getInitialRecord(contextKeyAndArgs, config);
 
   ////////////////////////////////////////////////////////////////////////
 
@@ -203,7 +215,7 @@ export default function fetch<TResponse, TError>(
 
     if (state === STATES.SUCCESS) {
       onSuccess?.(proxy.record);
-      return response; 
+      return response;
     }
     if (state === STATES.ERROR) {
       onError?.(proxy.record);
@@ -242,7 +254,6 @@ export default function fetch<TResponse, TError>(
   function invoke({ force = false, isManualInvoke = false, shouldDebounce = debounceInterval > 0 } = {}) {
     return (...args: TArgs) => {
       args = args.filter((arg: any) => arg.constructor.name !== 'Class' && !arg.constructor.name.includes('Event'));
-
       setArgs(args);
 
       if (!defer && fetchStrategy !== FETCH_STRATEGIES.FETCH_ONLY) {
