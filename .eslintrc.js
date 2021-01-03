@@ -4,7 +4,7 @@ module.exports = {
     node: true,
     es2021: true,
   },
-  extends: ['eslint:recommended'],
+  extends: ['eslint:recommended', 'react-app'],
   parserOptions: {
     ecmaVersion: 12,
     sourceType: 'module',
@@ -12,11 +12,16 @@ module.exports = {
   rules: {
     'no-unused-vars': 'warn',
     'comma-dangle': 'off',
+    'import/no-anonymous-default-export': 'off',
   },
   overrides: [
     {
       files: ['**/*.svelte'],
       extends: '@sveltejs',
+      rules: {
+        'comma-dangle': 'off',
+        'import/first': 'off',
+      },
     },
     {
       files: ['**/*.ts', '**/*.tsx'],

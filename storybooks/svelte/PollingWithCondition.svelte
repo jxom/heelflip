@@ -2,7 +2,7 @@
   import heelflip from '../../src/svelte';
 
   const response = {
-    pending: true,
+    pending: true
   };
   setTimeout(() => {
     response.pending = false;
@@ -11,7 +11,7 @@
   const getCharacters = async () => response;
   const store = heelflip.fetch('characters', getCharacters, {
     pollingInterval: 5000,
-    pollWhile: (record) => record.response && record.response.pending,
+    pollWhile: (record) => record.response && record.response.pending
   });
 
   $: {

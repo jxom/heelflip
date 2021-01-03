@@ -7,7 +7,7 @@
   let username = 'rick';
   const store = heelflip.fetch(['characters-cache-first', [{ username }]], getCharacters, {
     fetchStrategy: 'cache-first',
-    staleTime: 5000,
+    staleTime: 5000
   });
 
   function handleClickFetch() {

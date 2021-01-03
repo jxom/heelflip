@@ -5,8 +5,8 @@ import { setConfig } from '../config';
 
 export default {
   useFetch,
+  useDeferredFetch: deferredFetch({ fetch: useFetch, mutate: false }),
+  useMutate: deferredFetch({ fetch: useFetch, mutate: true }),
   prefetch,
-  deferredFetch: deferredFetch({ fetch, mutate: false }),
-  mutate: deferredFetch({ fetch, mutate: true }),
   setConfig,
 };

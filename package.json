@@ -11,7 +11,7 @@
     "clean": "node ./scripts/clean.js",
     "develop": "node ./scripts/build.js --watch",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src/",
+    "lint": "eslint src/ storybooks/",
     "lint:fix": "eslint src/ --fix",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
@@ -19,8 +19,8 @@
   "author": "Jake Moxey",
   "license": "MIT",
   "peerDependencies": {
-    "svelte": ">=3.0.0",
-    "react": ">=17.0.0"
+    "react": ">=17.0.0",
+    "svelte": ">=3.0.0"
   },
   "dependencies": {
     "serialize-javascript": "5.0.1"
@@ -49,11 +49,17 @@
     "@tsconfig/svelte": "^1.0.10",
     "@typescript-eslint/eslint-plugin": "^4.8.2",
     "@typescript-eslint/parser": "^4.8.2",
+    "babel-eslint": "10.1.0",
     "babel-loader": "^8.2.2",
     "chalk": "^4.1.0",
     "cross-spawn": "^7.0.3",
     "eslint": "^7.14.0",
+    "eslint-config-react-app": "6.0.0",
+    "eslint-plugin-flowtype": "5.2.0",
     "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "6.4.1",
+    "eslint-plugin-react": "^7.20.3",
+    "eslint-plugin-react-hooks": "^4.0.8",
     "eslint-plugin-svelte3": "3.0.0",
     "eslint-plugin-typescript": "0.14.0",
     "fs-extra": "^9.0.1",

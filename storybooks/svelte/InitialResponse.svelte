@@ -16,7 +16,7 @@
         {
           id: 3,
           name: 'Summer Smith',
-        }
+        },
       ],
     },
   });

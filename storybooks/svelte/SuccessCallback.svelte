@@ -4,7 +4,7 @@
   const getCharacters = async () =>
     fetch('https://rickandmortyapi.com/api/character?name=rick').then((res) => res.json());
   const store = heelflip.fetch('characters', getCharacters, {
-    onSuccess: (response) => console.log('onSuccess', response),
+    onSuccess: (response) => console.log('onSuccess', response)
   });
 
   $: {

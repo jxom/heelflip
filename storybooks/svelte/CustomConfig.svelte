@@ -2,7 +2,7 @@
   import heelflip from '../../src/svelte';
 
   heelflip.setConfig({
-    timeToSlowConnection: 1000,
+    timeToSlowConnection: 1000
   });
 
   const getThing = async () => new Promise((res) => setTimeout(() => res('This is a slow response'), 3000));

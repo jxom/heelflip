@@ -3,14 +3,14 @@
 
   const users = {
     0: {
-      name: 'Jake',
+      name: 'Jake'
     },
     1: {
-      name: 'John',
+      name: 'John'
     },
     2: {
-      name: 'Peter',
-    },
+      name: 'Peter'
+    }
   };
   const getUser = async (id) => {
     return new Promise((res) => {
