@@ -15,6 +15,7 @@
     "module": "esnext",
     "moduleResolution": "node",
     "strict": true,
+    "jsx": "react",
     "declaration": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": false,

@@ -1,14 +1,16 @@
-import { useRef, useEffect, useState } from 'react';
+import { useContext, useRef, useEffect, useState } from 'react';
 
 import type { TContextKeyAndArgs, TFn, TConfig } from '../types';
 import heelflip from '../core';
 import { getInitialRecord } from '../core/fetch';
+import ConfigContext from './ConfigContext';
 
 export default function useFetch<TResponse, TError>(
   contextKeyAndArgs: TContextKeyAndArgs,
   fn: TFn<TResponse>,
   config: TConfig<TResponse, TError> = {}
 ) {
+  const globalConfig = useContext(ConfigContext);
   const {
     cacheProvider,
     cacheStrategy,
@@ -31,7 +33,7 @@ export default function useFetch<TResponse, TError>(
     pollWhile,
     staleTime,
     timeToSlowConnection,
-  } = config;
+  } = { ...globalConfig, ...config };
   const fetch = useRef<any>({});
   const [record, setState] = useState(() => getInitialRecord(contextKeyAndArgs, config));
 
@@ -78,9 +80,6 @@ export default function useFetch<TResponse, TError>(
     initialResponse,
     invalidateOnSuccess,
     mutate,
-    onError,
-    onLoading,
-    onSuccess,
     pollOnMount,
     pollWhile,
     pollingInterval,

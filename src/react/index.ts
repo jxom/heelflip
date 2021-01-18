@@ -3,6 +3,8 @@ import deferredFetch from '../core/deferredFetch';
 import prefetch from '../core/prefetch';
 import { setConfig } from '../config';
 
+export { ConfigProvider } from './ConfigContext'
+
 export default {
   useFetch,
   useDeferredFetch: deferredFetch({ fetch: useFetch, mutate: false }),
